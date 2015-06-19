@@ -1,0 +1,33 @@
+<ion-view style="" title="Serie">
+	<ion-content>
+		<form name="form" ng-model="form">
+				<!-- Pure Serie attributes -->
+				<label style="" name="nom" class="item item-input">
+						<span class="input-label">titre</span>
+						<input type="text" placeholder="nom de la série" name="nom" ng-model="serie.nom" required />
+				</label>
+				<label style="" name="genre" class="item item-input">
+						<span class="input-label">genre</span>
+						<select ng-options="item for item in genreList" name="genre" ng-model="serie.genre"></select>
+				</label>
+				<input type="hidden" name="id" ng-model="serie.id" />
+
+				<!-- test for nested views -->
+				<!-- <div ui-view="albumContent"></div> -->
+
+				<!-- Album section (part of serie object) -->
+				<button class="button button-full button-dark icon-left ion-ios-plus-outline" on-tap="createAlbum()">Albums</button>
+				<ion-list can-swipe="true">
+		  			<ion-item ng-if="serie.albums.length == 0">
+						Appuyez sur <i class="icon ion-ios-plus-outline"></i> pour ajouter un élément à la liste
+					</ion-item>
+
+					<ion-item ng-repeat="item in serie.albums track by item.nom" item="item" item-type="item item-icon-left">
+			  					{{ item.nom }}
+					    <ion-option-button class="button-assertive" on-tap="removeItem(item)">Effacer</ion-option-button>
+					    <ion-option-button class="button-calm" on-tap="showEditItem(item)">Editer</ion-option-button>
+					</ion-item>
+				</ion-list>
+		</form>
+	</ion-content>
+</ion-view>

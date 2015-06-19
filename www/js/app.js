@@ -7,7 +7,7 @@
 // 'starter.controllers' is found in controllers.js
 angular.module('BDLibApp', ['ionic', 'BDLibApp.controllers', 'BDLibApp.services', 'ngPouch'])
 
-.run(function ($ionicPlatform,ngPouch,$log) {
+.run(function ($ionicPlatform,ngPouch,GenreService,$log) {
 	$ionicPlatform.ready(function () {
 		// Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
 		// for form inputs)
@@ -21,11 +21,12 @@ angular.module('BDLibApp', ['ionic', 'BDLibApp.controllers', 'BDLibApp.services'
 	});
 
 	// setupp local db and initialize views
-	ngPouch.saveSettings({database:'http://phil:phil@localhost:5984/bdlibdev',stayConnected: true });	
-	
+	// ngPouch.saveSettings({database:'http://phil:phil@192.168.1.3:5984/bdlibdev',stayConnected: true });
+	ngPouch.saveSettings({database:'http://localhost:5984/bdlibdev',stayConnected: true });
+
 	// Creation des view dans DB locale
-	var updateView = true;
-	if (updateView) { 
+	var updateView = false;
+	if (updateView) {
 		$log.info("Création des vues ...");
 	}
 	var filterOnGenre = createDesignDoc('filterOnGenre', function(doc) {
@@ -97,6 +98,10 @@ angular.module('BDLibApp', ['ionic', 'BDLibApp.controllers', 'BDLibApp.services'
 		});
 	}
 
+	//put series's genre into cache
+	GenreService.getList();
+
+
 })
 
 .config(function ($stateProvider, $urlRouterProvider) {
@@ -124,10 +129,11 @@ angular.module('BDLibApp', ['ionic', 'BDLibApp.controllers', 'BDLibApp.services'
 	})
 
 	.state('app.albums', {
-		url : '/albums',
+		url : '/albums/:serieId/:albumId',
 		views : {
 			appContent : {
-				templateUrl : 'pages/albums.html'
+				templateUrl : 'pages/albums.html',
+				controller : 'AlbumCtrl'
 			}
 		}
 	})
@@ -136,7 +142,17 @@ angular.module('BDLibApp', ['ionic', 'BDLibApp.controllers', 'BDLibApp.services'
 		url : '/series',
 		views : {
 			appContent : {
-				templateUrl : 'pages/series.html',
+				templateUrl : 'pages/seriesList.html',
+				controller : 'SeriesCtrl'
+			}
+		}
+	})
+
+	.state('app.serie', {
+		url : '/serie/:id',
+		views : {
+			appContent : {
+				templateUrl : 'pages/serie.html',
 				controller : 'SerieCtrl'
 			}
 		}
@@ -162,10 +178,43 @@ angular.module('BDLibApp', ['ionic', 'BDLibApp.controllers', 'BDLibApp.services'
 		url : '/errorModal/:msg',
 		templateUrl : 'pages/erreur.html',
 		controller : 'ConfirmCtrl'
-	});
+	})
+
+	;
 
 	// if none of the above states are matched, use this as the fallback
 
 	$urlRouterProvider.otherwise('/app/home');
 
 	});
+
+// test of nested views
+	// .state("app.main", {
+	// 		url:"/main",
+	// 		views : {
+	// 			appContent : {
+	// 				templateUrl: "pages/main_init.html",
+	// 				controller:'mainController'
+	// 			}
+	// 		}
+	// })
+	//
+	// .state("app.main.1", {
+	// 		parent: 'app.main',
+	// 		url:"/1",
+	// 		views : {
+	// 			mainContent : {
+	// 				templateUrl: "pages/form_1.html"
+	// 			}
+	// 		}
+	// })
+	//
+	// .state("app.main.2", {
+	// 		parent: 'app.main',
+	// 		url:"/2",
+	// 		views : {
+	// 			mainContent : {
+	// 				templateUrl: "pages/form_2.html",
+	// 			}
+	// 		}
+	// })

@@ -8,9 +8,9 @@ function createDesignDoc(name, mapFunction, reduceFunction) {
     views: {
     }
   };
-  if (reduceFunction) 
+  if (reduceFunction)
 	  ddoc.views[name] = { map: mapFunction.toString(), reduce: reduceFunction.toString() };
-  else 
+  else
 	  ddoc.views[name] = { map: mapFunction.toString() };
   return ddoc;
 }
@@ -38,7 +38,7 @@ function showText (htmlId, message, secs) {
 	setTimeout(function() {
 	    $("htmlId").fadeOut(1000);
 	}, secs*1000);
-	
+
 }
 
 function fixedEncodeURIComponent (str) {
@@ -47,4 +47,6 @@ function fixedEncodeURIComponent (str) {
 	  });
 }
 
-
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
