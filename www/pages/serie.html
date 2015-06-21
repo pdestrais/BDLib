@@ -18,11 +18,11 @@
 				<!-- Album section (part of serie object) -->
 				<button class="button button-full button-dark icon-left ion-ios-plus-outline" on-tap="createAlbum()">Albums</button>
 				<ion-list can-swipe="true">
-		  			<ion-item ng-if="serie.albums.length == 0">
+		  			<ion-item ng-if="albums.length == 0">
 						Appuyez sur <i class="icon ion-ios-plus-outline"></i> pour ajouter un élément à la liste
 					</ion-item>
 
-					<ion-item ng-repeat="item in serie.albums track by item.nom" item="item" item-type="item item-icon-left">
+					<ion-item ng-repeat="item in albums track by item.nom" item="item" item-type="item item-icon-left">
 			  					{{ item.nom }}
 					    <ion-option-button class="button-assertive" on-tap="removeItem(item)">Effacer</ion-option-button>
 					    <ion-option-button class="button-calm" on-tap="showEditItem(item)">Editer</ion-option-button>
