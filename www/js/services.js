@@ -185,11 +185,11 @@ angular.module('BDLibApp.services', [])
 	.factory('CRUDService', ['ngPouch', '$log', '$q', function (ngPouch, $log, $q) {
 
 				var srv = {
-					getList : function (entityType) {
+					getList : function (entityType,viewName,options) {
 						var defer = $q.defer();
 						var list = [];
-						viewName = "filterOn"+capitalizeFirstLetter(entityType);
-						ngPouch.db.query(viewName)
+						//	viewName = "filterOn"+capitalizeFirstLetter(entityType);
+						ngPouch.db.query(viewName,options)
 						.then(function (result) {
 							$log.debug("CRUDService - "+ entityType+ " list result : " + JSON.stringify(result));
 							angular.forEach(result.rows, function (value, index) {
@@ -205,10 +205,11 @@ angular.module('BDLibApp.services', [])
 					},
 					addItem : function (item,entityType) {
 						var defer = $q.defer();
+						var type = entityType.toLowerCase();
 						var doc = {
-							"type" : entityType.toLowerCase(),
-							"serie" : item
+							"type" : type
 						};
+						doc[type]=item;
 						ngPouch.db.post(doc)
 						.then(function (response) {
 							$log.info("CRUDService - "+ entityType+ " " + JSON.stringify(item) + " ajouté");
@@ -220,21 +221,31 @@ angular.module('BDLibApp.services', [])
 						});
 						return defer.promise;
 					},
-					updateItem : function (item,entityType) {
+					updateItem : function (id,rev,item,entityType) {
 						var defer = $q.defer();
-						item.type = entityType.toLowerCase();
-						ngPouch.db.get(item._id)
-						.then(function (doc) {
-							item._rev = doc._rev;
-							ngPouch.db.put(item)
-							.then(function(resultput) {
-								$log.info("CRUDService - "+ entityType+ " " + JSON.stringify(item) + " updaté");
-								defer.resolve(item);
+						if (!id)
+							defer.reject("pas d'identifiant pour update");
+						var type = entityType.toLowerCase();
+						doc={"_id":id,"_rev":rev,"type":type};
+						doc[type]=item;
+						if (!rev)
+						{
+							ngPouch.db.get(doc._id)
+							.then(function (resdoc) {
+									doc._rev = resdoc._rev;
+								}).catch (function (err) {
+									$log.error("CRUDService - update "+ entityType + " problem" + JSON.stringify(err));
+									defer.reject(err);
+								});
+						}
+						ngPouch.db.put(doc)
+						.then(function(resultput) {
+								$log.info("CRUDService - "+ entityType+ " " + JSON.stringify(resultput) + " updaté");
+								defer.resolve(resultput);
+							}).catch (function (err) {
+								$log.error("CRUDService - update "+ entityType + " problem" + JSON.stringify(err));
+								defer.reject(err);
 							});
-						}).catch (function (err) {
-							$log.error("CRUDService - update "+ entityType+ " problem" + JSON.stringify(err));
-							defer.reject(err);
-						});
 						return defer.promise;
 					},
 					deleteItem : function (item,entityType) {

@@ -6,6 +6,8 @@ angular.module('BDLibApp.controllers', ['ui.router'])
 
   .controller('ConfirmCtrl', ['$scope', '$stateParams', function ($scope, $stateParams) {
     $scope.msg = $stateParams.msg;
+    $scope.returnState=$stateParams.state;
+    $scope.id=$stateParams.id;
   }
   ])
 
@@ -37,7 +39,7 @@ angular.module('BDLibApp.controllers', ['ui.router'])
       };
 
       // Get list from storage
-      CRUDService.getList("editeur")
+      CRUDService.getList("editeur","filterOnEditeur")
         .then(function (res) {
           // Update UI (almost) instantly
           $scope.list = res;
@@ -134,7 +136,7 @@ angular.module('BDLibApp.controllers', ['ui.router'])
       };
 
       // Get list from storage
-      CRUDService.getList("serie")
+      CRUDService.getList("serie","filterOnSerie")
         .then(function (res) {
           // Update UI (almost) instantly
           $scope.list = res;
@@ -146,7 +148,7 @@ angular.module('BDLibApp.controllers', ['ui.router'])
           });
         });
 
-        CRUDService.getList("genre")
+        CRUDService.getList("genre","filterOnGenre")
         .then(function (res) {
           // Update UI (almost) instantly
           $scope.genreList = res;
@@ -219,7 +221,7 @@ angular.module('BDLibApp.controllers', ['ui.router'])
       $scope.id = $stateParams.id;
 
       if ($scope.id) {
-        CRUDService.getList("genre")
+        CRUDService.getList("genre","filterOnGenre")
           .then(function (res) {
             // Update UI (almost) instantly
             $scope.genreList = res;
@@ -230,6 +232,15 @@ angular.module('BDLibApp.controllers', ['ui.router'])
               .then(function (res) {
                 // Update UI (almost) instantly
                 $scope.serie = res.serie;
+                //get album list from serie
+                CRUDService.getList("album","listAlbumsBySerieId",{startkey:[$scope.id,0],endkey:[$scope.id,1000000]})
+                  .then(function(resalbums) {
+                    $scope.albums = resalbums;
+                    $log.info('SerieCtrl - Albums : ' + JSON.stringify($scope.albums));
+                  })
+                  .catch(function (err) {
+                    $state.go('errorModal', {msg: "Impossible d'accéder aux albums de la série" + err.JSONstringify});
+                  });
                 $log.info('SerieCtrl - Serie : ' + JSON.stringify($scope.serie));
               })
               .catch(function (err) {
@@ -246,7 +257,7 @@ angular.module('BDLibApp.controllers', ['ui.router'])
       }
 
       $scope.createAlbum = function() {
-        $state.go('app.albums',{
+        $state.go('app.album',{
           serieId: $scope.id
         });
       };
@@ -262,11 +273,11 @@ angular.module('BDLibApp.controllers', ['ui.router'])
       $scope.album._id = ($stateParams.albumId) ? $stateParams.albumId : null;
 
       // si le serieId existe, on souhaite alors créer un nouvel album appartenant à une série. L'albumId est alors null
-      if ($scope.serieId) {
+      // if ($scope.serieId) {
+      // }
 
-      }
-
-      CRUDService.getList("serie")
+      // Aller rechercher la liste des séries pour pouvoir associer l'album à une série ou updater la série à laquelle appartient l'album
+      CRUDService.getList("serie","filterOnSerie")
         .then(function (result) {
           $scope.serieList=result;
           // si l'albumId existe, il faut aller rechercher l'album, le serieId n'a alors pas d'importance
@@ -275,6 +286,8 @@ angular.module('BDLibApp.controllers', ['ui.router'])
               .then(function (res) {
                 // Update UI (almost) instantly
                 $scope.album = res.album;
+                $scope._id=res._id;
+                $scope._rev=res._rev;
                 $log.info('AlbumCtrl - Album : ' + JSON.stringify($scope.album));
               })
               .catch(function (err) {
@@ -291,8 +304,15 @@ angular.module('BDLibApp.controllers', ['ui.router'])
         });
 
       $scope.addAlbum = function() {
-          delete album._id;
-          CRUDService.addItem($scope.album,"album");
+          delete $scope.album._id;
+          CRUDService.addItem($scope.album,"album")
+          .then(function(res) {
+            $state.go('confirmModal', {
+              "msg": "Album créé",
+              "state" : "app.serie",
+              "id" : $scope.album.serieId
+            });
+          });
       };
 
       $scope.deleteAlbum = function() {
@@ -300,7 +320,7 @@ angular.module('BDLibApp.controllers', ['ui.router'])
       };
 
       $scope.updateAlbum = function() {
-          CRUDService.updateItem($scope.album._id,"album");
+          CRUDService.updateItem($scope._id, $scope._rev,album,"album");
       };
 
       $scope.createAlbum = function() {
@@ -311,6 +331,10 @@ angular.module('BDLibApp.controllers', ['ui.router'])
 
     }
   ])
+
+  .controller('BiblioCtrl', function ($scope) {
+    $scope.Model = $scope.Model || {Name : "xxx"};
+  })
 
 
   // test of nested views

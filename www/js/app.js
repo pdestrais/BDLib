@@ -98,6 +98,32 @@ angular.module('BDLibApp', ['ionic', 'BDLibApp.controllers', 'BDLibApp.services'
 		});
 	}
 
+	var listAlbumsBySerieId = createDesignDoc('listAlbumsBySerieId', function(doc) {
+															if (doc.type=="album") {
+															  emit([doc.album.serieId,doc.album.numero], doc.album);
+															}
+														});
+	if (updateView) {
+		ngPouch.db.get(listAlbumsBySerieId._id)
+		.then(function(doc) {
+			if (doc._rev) {
+				listAlbumsBySerieId._rev=doc._rev;
+			}
+		  return ngPouch.db.put(listAlbumsBySerieId);
+		}).catch(function (err) {
+			if (err.message=="missing") {
+				ngPouch.db.post(listAlbumsBySerieId)
+				.then(function (response) {
+					$log.info("listAlbumsBySerieId view created");
+				}).catch(function (err) {
+					$log.error("listAlbumsBySerieId view create problem"+JSON.stringify(err));
+				});
+			} else {
+				$log.error("listAlbumsBySerieId view update problem"+JSON.stringify(err));
+			}
+		});
+	}
+
 	//put series's genre into cache
 	GenreService.getList();
 
@@ -128,11 +154,12 @@ angular.module('BDLibApp', ['ionic', 'BDLibApp.controllers', 'BDLibApp.services'
 		controller : 'AppCtrl'
 	})
 
-	.state('app.albums', {
-		url : '/albums/:serieId/:albumId',
+	.state('app.album', {
+		url : '/album/:serieId/:albumId',
+//		url : '/album',
 		views : {
 			appContent : {
-				templateUrl : 'pages/albums.html',
+				templateUrl : 'pages/album.html',
 				controller : 'AlbumCtrl'
 			}
 		}
@@ -168,8 +195,18 @@ angular.module('BDLibApp', ['ionic', 'BDLibApp.controllers', 'BDLibApp.services'
 		}
 	})
 
+	.state('app.biblio', {
+		url : '/biblio',
+		views : {
+			appContent : {
+				templateUrl : 'pages/biblio.html',
+				controller : 'BiblioCtrl'
+			}
+		}
+	})
+
 	.state('confirmModal', {
-		url : '/confirmModal/:msg',
+		url : '/confirmModal/:msg/:state/:id',
 		templateUrl : 'pages/confirm.html',
 		controller : 'ConfirmCtrl'
 	})

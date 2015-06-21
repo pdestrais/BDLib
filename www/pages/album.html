@@ -1,4 +1,4 @@
-<ion-view style="" title="Albums">
+<ion-view style="" title="Album">
     <ion-content class="has-header" padding="true">
       <div>
           <form style="">
@@ -8,11 +8,11 @@
             </label>
             <label style="" name="numero" class="item item-input">
                 <span class="input-label">numero</span>
-                <input placeholder="Numéro" type="text" ng-model="album.numero" required>
+                <input placeholder="Numéro" type="number" min="0" step="1" ng-model="album.numero" required>
             </label>
             <label style="" name="pages" class="item item-input">
                 <span class="input-label">Pages</span>
-                <input placeholder="pages" type="text" ng-model="album.nbrePages">
+                <input placeholder="pages" type="number" min="1" step="1" ng-model="album.nbrePages">
             </label>
             <label style="" name="dessinateur" class="item item-input">
                 <span class="input-label">Dessinateur</span>
@@ -24,11 +24,11 @@
             </label>
             <label style="" name="estimation" class="item item-input">
                 <span class="input-label">Estimation</span>
-                <input placeholder="Estimation de prix" type="numeric" ng-model="album.estimation">
+                <input placeholder="Estimation de prix" type="number" min="0" ng-model="album.estimation">
             </label>
             <label style="" name="prixAchat" class="item item-input">
                 <span class="input-label">Prix d'achat</span>
-                <input placeholder="Prix d'achat" type="numeric" ng-model="album.prixAchat">
+                <input placeholder="Prix d'achat" type="number" min="0" ng-model="album.prixAchat">
             </label>
             <label style="" name="dateAchat" class="item item-input">
                 <span class="input-label">Date d'achat</span>
@@ -42,12 +42,13 @@
                 <span class="input-label">Commentaire</span>
                 <input placeholder="Commentaire" type="text" ng-model="album.commentaire">
             </label>
-            <label style="" name="Serie" class="item item-select">
+            <label style="" name="serie" class="item item-select">
                 <span class="input-label">Série</span>
                 <select ng-options="item._id as item.serie.nom for item in serieList" name="serie" ng-model="album.serieId"></select>
             </label>
-            <input type="hidden" name="id" ng-model="album._id" />
-        </form>
+            <input type="hidden" name="id" ng-model="_id" />
+            <input type="hidden" name="rev" ng-model="_rev" />
+          </form>
         <!-- Buttons to add or change the whole serie entity -->
 				<ion-button ng-if="!album._id" class="button button-block button-positive" ng-click="addAlbum()">
 							Ajouter
