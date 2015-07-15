@@ -1,0 +1,22 @@
+<ion-view style="" title="Preferences">
+            <ion-content style="" class="has-header" padding="true">
+                <div style="" class="button-bar">
+
+<!-- 					<a style="" class="button button-stable button-block" href="/app/albums">Album</a>
+                    <a style="" class="button button-stable button-block" href="/app/series">Série</a>
+                    <a style="" class="button button-stable button-block" href="/app/editeurs">Editeur</a>
+ -->
+					</div>
+                <form style="">
+                    <ion-list style="">
+                        Url Serveur distant</br>
+                        <label style="" name="remoteServerUrl" class="item item-input">
+                            <input placeholder="URL server DB" type="text" value={{url}}>
+                        </label>
+                    </ion-list>
+                    <ion-button class="button button-block button-positive" ng-click="updateRemoteUrl()">
+                          Enregistrer
+                    </ion-button>
+                </form>
+            </ion-content>
+</ion-view>

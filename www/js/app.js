@@ -5,9 +5,9 @@
 // the 2nd parameter is an array of 'requires'
 // 'starter.services' is found in services.js
 // 'starter.controllers' is found in controllers.js
-angular.module('BDLibApp', ['ionic', 'BDLibApp.controllers', 'BDLibApp.services', 'ngPouch'])
+angular.module('BDLibApp', ['ionic', 'BDLibApp.controllers', 'BDLibApp.services', 'BDLibApp.directives', 'ngPouch'])
 
-.run(function ($ionicPlatform,ngPouch,GenreService,$log) {
+.run(function ($ionicPlatform,ngPouch,GenreService,$log,$cacheFactory) {
 	$ionicPlatform.ready(function () {
 		// Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
 		// for form inputs)
@@ -19,110 +19,6 @@ angular.module('BDLibApp', ['ionic', 'BDLibApp.controllers', 'BDLibApp.services'
 			StatusBar.styleDefault();
 		}
 	});
-
-	// setupp local db and initialize views
-	// ngPouch.saveSettings({database:'http://phil:phil@192.168.1.3:5984/bdlibdev',stayConnected: true });
-	ngPouch.saveSettings({database:'http://localhost:5984/bdlibdev',stayConnected: true });
-
-	// Creation des view dans DB locale
-	var updateView = false;
-	if (updateView) {
-		$log.info("Création des vues ...");
-	}
-	var filterOnGenre = createDesignDoc('filterOnGenre', function(doc) {
-															if (doc.type == "genre") {
-															  emit(doc._id, doc.genre.nom);
-															}
-														});
-	if (updateView) {
-		ngPouch.db.get(filterOnGenre._id)
-		.then(function(doc) {
-			if (doc._rev) {
-				filterOnGenre._rev=doc._rev;
-			}
-		  return ngPouch.db.put(filterOnGenre);
-		}).catch(function (err) {
-		  $log.error("filterOnGenre update problem"+JSON.stringify(err));
-		});
-	}
-
-	var filterOnEditeur = createDesignDoc('filterOnEditeur', function(doc) {
-															if (doc.type=="editeur") {
-															  emit(doc._id, doc);
-															}
-														});
-	if (updateView) {
-		ngPouch.db.get(filterOnEditeur._id)
-		.then(function(doc) {
-			if (doc._rev) {
-				filterOnEditeur._rev=doc._rev;
-			}
-		  return ngPouch.db.put(filterOnEditeur);
-		}).catch(function (err) {
-			if (err.message=="missing") {
-				ngPouch.db.post(filterOnEditeur)
-				.then(function (response) {
-					$log.info("filterOnEditeur view created");
-				}).catch(function (err) {
-					$log.error("filterOnEditeur view create problem"+JSON.stringify(err));
-				});
-			} else {
-				$log.error("filterOnEditeur view update problem"+JSON.stringify(err));
-			}
-		});
-	}
-
-	var filterOnSerie = createDesignDoc('filterOnSerie', function(doc) {
-															if (doc.type=="serie") {
-															  emit(doc._id, doc);
-															}
-														});
-	if (updateView) {
-		ngPouch.db.get(filterOnSerie._id)
-		.then(function(doc) {
-			if (doc._rev) {
-				filterOnSerie._rev=doc._rev;
-			}
-		  return ngPouch.db.put(filterOnSerie);
-		}).catch(function (err) {
-			if (err.message=="missing") {
-				ngPouch.db.post(filterOnSerie)
-				.then(function (response) {
-					$log.info("filterOnSerie view created");
-				}).catch(function (err) {
-					$log.error("filterOnSerie view create problem"+JSON.stringify(err));
-				});
-			} else {
-				$log.error("filterOnSerie view update problem"+JSON.stringify(err));
-			}
-		});
-	}
-
-	var listAlbumsBySerieId = createDesignDoc('listAlbumsBySerieId', function(doc) {
-															if (doc.type=="album") {
-															  emit([doc.album.serieId,doc.album.numero], doc.album);
-															}
-														});
-	if (updateView) {
-		ngPouch.db.get(listAlbumsBySerieId._id)
-		.then(function(doc) {
-			if (doc._rev) {
-				listAlbumsBySerieId._rev=doc._rev;
-			}
-		  return ngPouch.db.put(listAlbumsBySerieId);
-		}).catch(function (err) {
-			if (err.message=="missing") {
-				ngPouch.db.post(listAlbumsBySerieId)
-				.then(function (response) {
-					$log.info("listAlbumsBySerieId view created");
-				}).catch(function (err) {
-					$log.error("listAlbumsBySerieId view create problem"+JSON.stringify(err));
-				});
-			} else {
-				$log.error("listAlbumsBySerieId view update problem"+JSON.stringify(err));
-			}
-		});
-	}
 
 	//put series's genre into cache
 	GenreService.getList();
@@ -143,6 +39,16 @@ angular.module('BDLibApp', ['ionic', 'BDLibApp.controllers', 'BDLibApp.services'
 		views : {
 			appContent : {
 				templateUrl : 'pages/home.html'
+			}
+		}
+	})
+
+	.state('app.preferences', {
+		url : '/preferences',
+		views : {
+			appContent : {
+				templateUrl : 'pages/preferences.html',
+				controller : 'PreferenceCtrl'
 			}
 		}
 	})

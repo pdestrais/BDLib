@@ -30,158 +30,7 @@ angular.module('BDLibApp.services', [])
 			return srv;
 		}
 	])
-// .factory('EditeurService', ['ngPouch', '$log', '$q', function (ngPouch, $log, $q) {
-//
-// 			var srv = {
-// 				getList : function () {
-// 					var defer = $q.defer();
-// 					var list = [];
-// 					ngPouch.db.query('filterOnEditeur')
-// 					.then(function (result) {
-// 						$log.debug("EditeurService - query result : " + JSON.stringify(result));
-// 						angular.forEach(result.rows, function (value, index) {
-// 							list.push(value.value);
-// 						});
-// 						defer.resolve(list);
-// 					}).catch (function (err) {
-// 						$log.error("EditeurService - getList error " + JSON.stringify(err));
-// 						defer.reject(err);
-// 					});
-// 					return defer.promise;
-//
-// 				},
-// 				addItem : function (item) {
-// 					var defer = $q.defer();
-// 					var doc = {
-// 						"type" : "editeur",
-// 						"editeur" : item
-// 					};
-// 					ngPouch.db.post(doc)
-// 					.then(function (response) {
-// 						$log.info("EditeurService - Editeur " + JSON.stringify(item) + " ajouté");
-// 						doc._id = response.id;
-// 						defer.resolve(doc);
-// 					}).catch (function (err) {
-// 						$log.error("EditeurService - add editeur problem" + JSON.stringify(err));
-// 						defer.reject(err);
-// 					});
-// 					return defer.promise;
-// 				},
-// 				updateItem : function (item) {
-// 					var defer = $q.defer();
-// 					item.type = "serie";
-// 					ngPouch.db.get(item._id)
-// 					.then(function (doc) {
-// 						item._rev = doc._rev;
-// 						ngPouch.db.put(item)
-// 						.then(function(resultput) {
-// 							$log.info("EditeurService - Editeur " + JSON.stringify(item) + " updaté");
-// 							defer.resolve(item);
-// 						});
-// 					}).catch (function (err) {
-// 						$log.error("EditeurService - update serie problem" + JSON.stringify(err));
-// 						defer.reject(err);
-// 					});
-// 					return defer.promise;
-// 				},
-// 				deleteItem : function (item) {
-// 					ngPouch.db.get(item._id)
-// 					.then(function (doc) {
-// 						item._rev = doc._rev;
-// 						$log.info("EditeurService - Editeur " + JSON.stringify(item) + " effacé");
-// 						return ngPouch.db.remove(item);
-// 					}).catch (function (err) {
-// 						$log.error("EditeurService - delete serie problem" + JSON.stringify(err));
-// 						return (null);
-// 					});
-// 				}
-// 			};
-// 			return srv;
-// 		}
-// 	])
-// .factory('SerieService', ['ngPouch', '$log', '$q', function (ngPouch, $log, $q) {
-//
-// 			var srv = {
-// 				getList : function () {
-// 					var defer = $q.defer();
-// 					var list = [];
-// 					ngPouch.db.query('filterOnSerie')
-// 					.then(function (result) {
-// 						$log.debug("SerieService - query result : " + JSON.stringify(result));
-// 						angular.forEach(result.rows, function (value, index) {
-// 							list.push(value.value);
-// 						});
-// 						defer.resolve(list);
-// 					}).catch (function (err) {
-// 						$log.error("SerieService - getList error " + JSON.stringify(err));
-// 						defer.reject(err);
-// 					});
-// 					return defer.promise;
-//
-// 				},
-// 				addItem : function (item) {
-// 					var defer = $q.defer();
-// 					var doc = {
-// 						"type" : "serie",
-// 						"serie" : item
-// 					};
-// 					ngPouch.db.post(doc)
-// 					.then(function (response) {
-// 						$log.info("SerieService - Editeur " + JSON.stringify(item) + " ajouté");
-// 						doc._id = response.id;
-// 						defer.resolve(doc);
-// 					}).catch (function (err) {
-// 						$log.error("SerieService - add serie problem" + JSON.stringify(err));
-// 						defer.reject(err);
-// 					});
-// 					return defer.promise;
-// 				},
-// 				updateItem : function (item) {
-// 					var defer = $q.defer();
-// 					item.type = "serie";
-// 					ngPouch.db.get(item._id)
-// 					.then(function (doc) {
-// 						item._rev = doc._rev;
-// 						ngPouch.db.put(item)
-// 						.then(function(resultput) {
-// 							$log.info("SerieService - Editeur " + JSON.stringify(item) + " updaté");
-// 							defer.resolve(item);
-// 						});
-// 					}).catch (function (err) {
-// 						$log.error("SerieService - update serie problem" + JSON.stringify(err));
-// 						defer.reject(err);
-// 					});
-// 					return defer.promise;
-// 				},
-// 				deleteItem : function (item) {
-// 					var defer = $q.defer();
-// 					ngPouch.db.get(item._id)
-// 					.then(function (doc) {
-// 						item._rev = doc._rev;
-// 						$log.info("SerieService - Editeur " + JSON.stringify(item) + " effacé");
-// 						defer.resolve(ngPouch.db.remove(item));
-// 					}).catch (function (err) {
-// 						$log.error("SerieService - delete serie problem" + JSON.stringify(err));
-// 						defer.reject(err);
-// 					});
-// 					return defer.promise;
-// 				},
-// 				getItem : function (itemid) {
-// 					var defer = $q.defer();
-// 					ngPouch.db.get(itemid)
-// 					.then(function (doc) {
-// 						defer.resolve(doc);
-// 					}).catch (function (err) {
-// 						$log.error("SerieService - get serie problem" + JSON.stringify(err));
-// 						defer.reject(err);
-// 					});
-// 					return defer.promise;
-// 				}
-// 			};
-// 			return srv;
-// 		}
-// 	])
-//
+
 	.factory('CRUDService', ['ngPouch', '$log', '$q', function (ngPouch, $log, $q) {
 
 				var srv = {
@@ -193,7 +42,9 @@ angular.module('BDLibApp.services', [])
 						.then(function (result) {
 							$log.debug("CRUDService - "+ entityType+ " list result : " + JSON.stringify(result));
 							angular.forEach(result.rows, function (value, index) {
-								list.push(value.value);
+								item = value.value;
+								item._id = value.id;
+								list.push(item);
 							});
 							defer.resolve(list);
 						}).catch (function (err) {
@@ -201,7 +52,6 @@ angular.module('BDLibApp.services', [])
 							defer.reject(err);
 						});
 						return defer.promise;
-
 					},
 					addItem : function (item,entityType) {
 						var defer = $q.defer();
@@ -276,4 +126,116 @@ angular.module('BDLibApp.services', [])
 				return srv;
 			}
 		])
+
+	.factory('ViewsService', ['ngPouch', '$log', '$q', function (ngPouch, $log, $q) {
+
+			var srv = {
+				create : function () {
+						// Creation des view dans DB locale
+						var updateView = false;
+						if (updateView) {
+							$log.info("Création des vues ...");
+						}
+
+						var filterOnGenre = createDesignDoc('filterOnGenre', function(doc) {
+																				if (doc.type == "genre") {
+																					emit(doc._id, doc.genre.nom);
+																				}
+																			});
+						if (updateView) {
+							ngPouch.db.get(filterOnGenre._id)
+							.then(function(doc) {
+								if (doc._rev) {
+									filterOnGenre._rev=doc._rev;
+								}
+								return ngPouch.db.put(filterOnGenre);
+							}).catch(function (err) {
+								$log.error("filterOnGenre update problem"+JSON.stringify(err));
+							});
+						}
+
+						var filterOnEditeur = createDesignDoc('filterOnEditeur', function(doc) {
+																				if (doc.type=="editeur") {
+																					emit(doc._id, doc);
+																				}
+																			});
+						if (updateView) {
+							ngPouch.db.get(filterOnEditeur._id)
+							.then(function(doc) {
+								if (doc._rev) {
+									filterOnEditeur._rev=doc._rev;
+								}
+								return ngPouch.db.put(filterOnEditeur);
+							}).catch(function (err) {
+								if (err.message=="missing") {
+									ngPouch.db.post(filterOnEditeur)
+									.then(function (response) {
+										$log.info("filterOnEditeur view created");
+									}).catch(function (err) {
+										$log.error("filterOnEditeur view create problem"+JSON.stringify(err));
+									});
+								} else {
+									$log.error("filterOnEditeur view update problem"+JSON.stringify(err));
+								}
+							});
+						}
+
+						var filterOnSerie = createDesignDoc('filterOnSerie', function(doc) {
+																				if (doc.type=="serie") {
+																					emit(doc._id, doc);
+																				}
+																			});
+						if (updateView) {
+							ngPouch.db.get(filterOnSerie._id)
+							.then(function(doc) {
+								if (doc._rev) {
+									filterOnSerie._rev=doc._rev;
+								}
+								return ngPouch.db.put(filterOnSerie);
+							}).catch(function (err) {
+								if (err.message=="missing") {
+									ngPouch.db.post(filterOnSerie)
+									.then(function (response) {
+										$log.info("filterOnSerie view created");
+									}).catch(function (err) {
+										$log.error("filterOnSerie view create problem"+JSON.stringify(err));
+									});
+								} else {
+									$log.error("filterOnSerie view update problem"+JSON.stringify(err));
+								}
+							});
+						}
+
+						var listAlbumsBySerieId = createDesignDoc('listAlbumsBySerieId', function(doc) {
+																				if (doc.type=="album") {
+																					emit([doc.album.serieId,doc.album.numero], doc.album);
+																				}
+																			});
+						if (updateView) {
+							ngPouch.db.get(listAlbumsBySerieId._id)
+							.then(function(doc) {
+								if (doc._rev) {
+									listAlbumsBySerieId._rev=doc._rev;
+								}
+								return ngPouch.db.put(listAlbumsBySerieId);
+							}).catch(function (err) {
+								if (err.message=="missing") {
+									ngPouch.db.post(listAlbumsBySerieId)
+									.then(function (response) {
+										$log.info("listAlbumsBySerieId view created");
+									}).catch(function (err) {
+										$log.error("listAlbumsBySerieId view create problem"+JSON.stringify(err));
+									});
+								} else {
+									$log.error("listAlbumsBySerieId view update problem"+JSON.stringify(err));
+								}
+							});
+						}
+				}
+			};
+			return srv;
+		}
+	])
+
+
 	;
