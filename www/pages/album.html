@@ -1,18 +1,22 @@
 <ion-view style="" title="Album">
     <ion-content class="has-header" padding="true">
       <div>
-          <form style="">
-            <label style="" name="titre" class="item item-input">
+          <form name="albumForm" style="">
+            <label ng-class="{ 'has-errors' : albumForm.titre.$invalid && !albumForm.titre.$pristine , 'no-errors' : albumForm.titre.$valid }" ng-messages-include="error-list.html" style="" name="titre" class="item item-input">
                 <span class="input-label">titre</span>
-                <input placeholder="Titre" type="text" ng-model="album.nom" required>
+                <input placeholder="Titre" name="titre" type="text" ng-model="album.nom" required>
             </label>
-            <label style="" name="numero" class="item item-input">
+            <div class="error-container" ng-show="albumForm.titre.$error" ng-messages="albumForm.titre.$error" ng-messages-include="error-list.html">
+            </div>
+            <label ng-class="{ 'has-errors' : albumForm.numero.$invalid && !albumForm.numero.$pristine , 'no-errors' : albumForm.numero.$valid }" ng-messages-include="error-list.html" style="" name="numero" class="item item-input">
                 <span class="input-label">numero</span>
-                <input placeholder="Numéro" type="number" min="0" step="1" ng-model="album.numero" required>
+                <input placeholder="Numéro" name="numero" type="number" value="1" min="1" step="1" ng-model="album.numero" required>
             </label>
+            <div class="error-container" ng-show="albumForm.numero.$error" ng-messages="albumForm.numero.$error" ng-messages-include="error-list.html">
+            </div>
             <label style="" name="pages" class="item item-input">
                 <span class="input-label">Pages</span>
-                <input placeholder="pages" type="number" min="1" step="1" ng-model="album.nbrePages">
+                <input placeholder="pages" type="number" value="1" min="1" step="1" ng-model="album.nbrePages">
             </label>
             <label style="" name="dessinateur" class="item item-input">
                 <span class="input-label">Dessinateur</span>
@@ -42,23 +46,23 @@
                 <span class="input-label">Commentaire</span>
                 <input placeholder="Commentaire" type="text" ng-model="album.commentaire">
             </label>
-            <label style="" name="serie" class="item item-select">
+            <label ng-if="!serieId" style="" name="serie" class="item item-select">
                 <span class="input-label">Série</span>
                 <select ng-options="item._id as item.serie.nom for item in serieList" name="serie" ng-model="album.serieId"></select>
             </label>
-            <input type="hidden" name="id" ng-model="_id" />
-            <input type="hidden" name="rev" ng-model="_rev" />
+            <!-- Buttons to add or change the whole serie entity -->
+    				<ion-button ng-disabled="albumForm.$invalid" ng-if="!albumNr" class="button button-block button-positive" ng-click="addAlbum()">
+    							Ajouter
+    				</ion-button>
+            <ion-button ng-if="albumNr" class="button button-block button-positive" ng-click="updateAlbum()">
+    							Changer
+    				</ion-button>
+            <ion-button ng-if="albumNr" class="button button-block button-positive" ng-click="deleteAlbum()">
+    							Effacer
+    				</ion-button>
+            <input type="hidden" name="oldAlbumNr" ng-model="_oldAlbNr" />
           </form>
-        <!-- Buttons to add or change the whole serie entity -->
-				<ion-button ng-if="!album._id" class="button button-block button-positive" ng-click="addAlbum()">
-							Ajouter
-				</ion-button>
-        <ion-button ng-if="album._id" class="button button-block button-positive" ng-click="updateAlbum()">
-							Changer
-				</ion-button>
-        <ion-button ng-if="album._id" class="button button-block button-positive" ng-click="deleteAlbum()">
-							Effacer
-				</ion-button>
+
       </div>
     </ion-content>
 </ion-view>
