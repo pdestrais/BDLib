@@ -5,7 +5,7 @@
 // the 2nd parameter is an array of 'requires'
 // 'starter.services' is found in services.js
 // 'starter.controllers' is found in controllers.js
-angular.module('BDLibApp', ['ionic', 'BDLibApp.controllers', 'BDLibApp.services', 'BDLibApp.directives', 'ngPouch'])
+angular.module('BDLibApp', ['ionic', 'BDLibApp.controllers', 'BDLibApp.services', 'BDLibApp.directives', 'ngPouch', 'ngMessages'])
 
 .run(function ($ionicPlatform,ngPouch,GenreService,$log,$cacheFactory) {
 	$ionicPlatform.ready(function () {
@@ -60,15 +60,31 @@ angular.module('BDLibApp', ['ionic', 'BDLibApp.controllers', 'BDLibApp.services'
 		controller : 'AppCtrl'
 	})
 
-	.state('app.album', {
-		url : '/album/:serieId/:albumId',
-//		url : '/album',
+// 	.state('app.album', {
+// 		url : '/album/:serieId/:albumId',
+// //		url : '/album',
+// 		views : {
+// 			appContent : {
+// 				templateUrl : 'pages/album.html',
+// 				controller : 'AlbumCtrl'
+// 			}
+// 		}
+// 	})
+
+	.state('app.serie.album', {
+		parent: 'app.serie',
+		cache : false,
+		url : '/album/:albumNr',
+//		url : '^/serie/album/:serieId/:albumNr',
+	//		url : '/album',
 		views : {
-			appContent : {
+			"appContent@app" : {
 				templateUrl : 'pages/album.html',
 				controller : 'AlbumCtrl'
 			}
 		}
+		// ,
+		// params: ['id']
 	})
 
 	.state('app.series', {
@@ -82,7 +98,8 @@ angular.module('BDLibApp', ['ionic', 'BDLibApp.controllers', 'BDLibApp.services'
 	})
 
 	.state('app.serie', {
-		url : '/serie/:id',
+		url : '/serie/:serieId',
+		cache : false,
 		views : {
 			appContent : {
 				templateUrl : 'pages/serie.html',

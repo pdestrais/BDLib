@@ -278,7 +278,7 @@ angular.module('BDLibApp.controllers', ['ui.router'])
       $scope.showEditItem = function (item) {
         // Remember edit item to change it later
         $state.go('app.serie', {
-          id: item._id
+          serieId: item._id
         });
       };
 
@@ -299,101 +299,132 @@ angular.module('BDLibApp.controllers', ['ui.router'])
   .controller('SerieCtrl', ['CRUDService', 'GenreService', '$scope', '$ionicModal', '$ionicPopup', '$state', '$log', '$stateParams',
     function (CRUDService, GenreService, $scope, $ionicModal, $ionicPopup, $state, $log, $stateParams) {
 
-      $scope.id = $stateParams.id;
-      $log.info('SerieCtrl - serie id parameter : ' + $scope.id);
+      $scope.id = $stateParams.serieId;
+      $scope.serie = $scope.serie || {};
+      $scope.album = $scope.album || {};
+      $scope.serieId = ($stateParams.serieId) ?  $stateParams.serieId : "";
+      $scope.album.numero = ($stateParams.albumNr) ? $stateParams.albumNr : null;
+      $log.info('SerieCtrl - serie id parameter : ' + $scope.serieId);
 
-      $scope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams){
-        $log.info('SerieCtrl - stateChangeSuccess event');
-        if ($scope.id) {
-          CRUDService.getList("genre","filterOnGenre")
-            .then(function (res) {
-              // Update UI (almost) instantly
-              $scope.genreList = res;
-              $log.info('SerieCtrl - Genre list : ' + JSON.stringify($scope.genreList));
-
-              // Get list from storage - if this part is not done inside the then, this creates very strange effects and options are not correctly filled in
-              CRUDService.getItem($scope.id,"serie")
-                .then(function (res) {
-                  // Update UI (almost) instantly
-                  $scope.serie = res.serie;
-                  //get album list from serie
-                  CRUDService.getList("album","listAlbumsBySerieId",{startkey:[$scope.id,0],endkey:[$scope.id,1000000]})
-                    .then(function(resalbums) {
-                      $scope.albums = resalbums;
-                      $log.info('SerieCtrl - Albums : ' + JSON.stringify($scope.albums));
-                    })
-                    .catch(function (err) {
-                      $state.go('errorModal', {msg: "Impossible d'accéder aux albums de la série" + err.JSONstringify});
-                    });
-                  $log.info('SerieCtrl - Serie : ' + JSON.stringify($scope.serie));
-                })
-                .catch(function (err) {
-                  $state.go('errorModal', {
-                    msg: "Impossible d'accéder aux données de la série" + err.JSONstringify
-                  });
+      if ($scope.serieId) {
+        CRUDService.getList("genre","filterOnGenre")
+          .then(function (res) {
+            // Update UI (almost) instantly
+            $scope.genreList = res;
+            $log.info('SerieCtrl - Genre list : ' + JSON.stringify($scope.genreList));
+            // Get list from storage - if this part is not done inside the then, this creates very strange effects and options are not correctly filled in
+            CRUDService.getItem($scope.serieId,"serie")
+              .then(function (res) {
+                // Update UI (almost) instantly
+                $scope.serie = res.serie;
+                $scope.serieRev = res._rev;
+                $scope.albums = res.serie.albums;
+                $log.info('SerieCtrl - Serie : ' + JSON.stringify($scope.serie));
+              })
+              .catch(function (err) {
+                $state.go('errorModal', {
+                  msg: "Impossible d'accéder aux données de la série" + err.JSONstringify
                 });
-            })
-            .catch(function (err) {
-              $state.go('errorModal', {
-                msg: "Impossible d'accéder à la liste de genres " + err.JSONstringify
               });
+          })
+          .catch(function (err) {
+            $state.go('errorModal', {
+              msg: "Impossible d'accéder à la liste de genres " + err.JSONstringify
             });
-        }
-      });
+          });
+      }
 
-      // $ionicModal.fromTemplateUrl('resultmodal.html', {
-      //   scope: $scope,
-      //   animation: 'slide-in-up'
-      // }).then(function(modal) {
-      //   $scope.modal = modal;
-      // });
-      //
-      // $scope.openModal = function() {
-      //   $scope.modal.show();
-      // };
-      //
-      // $scope.closeModal = function() {
-      //   $scope.modal.hide();
-      // };
-      //
-      // $scope.$on('$destroy', function() {
-      //   $scope.modal.remove();
+      // $scope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams){
+      //   $log.info('SerieCtrl - stateChangeSuccess event');
+      //   switch (fromState.name) {
+      //     case 'app.series' :
+      //     case 'app.serie.album' :
+      //       if ($scope.serieId) {
+      //         CRUDService.getList("genre","filterOnGenre")
+      //           .then(function (res) {
+      //             // Update UI (almost) instantly
+      //             $scope.genreList = res;
+      //             $log.info('SerieCtrl - Genre list : ' + JSON.stringify($scope.genreList));
+      //             // Get list from storage - if this part is not done inside the then, this creates very strange effects and options are not correctly filled in
+      //             CRUDService.getItem($scope.serieId,"serie")
+      //               .then(function (res) {
+      //                 // Update UI (almost) instantly
+      //                 $scope.serie = res.serie;
+      //                 $scope.serieRev = res._rev;
+      //                 $scope.albums = res.serie.albums;
+      //                 $log.info('SerieCtrl - Serie : ' + JSON.stringify($scope.serie));
+      //               })
+      //               .catch(function (err) {
+      //                 $state.go('errorModal', {
+      //                   msg: "Impossible d'accéder aux données de la série" + err.JSONstringify
+      //                 });
+      //               });
+      //           })
+      //           .catch(function (err) {
+      //             $state.go('errorModal', {
+      //               msg: "Impossible d'accéder à la liste de genres " + err.JSONstringify
+      //             });
+      //           });
+      //       }
+      //       break;
+      //     case 'app.serie' :
+      //       // Aller rechercher la liste des séries pour pouvoir associer l'album à une série ou updater la série à laquelle appartient l'album
+      //       CRUDService.getList("serie","filterOnSerie")
+      //         .then(function (result) {
+      //           $scope.serieList=result;
+      //           // si l'albumId existe, il faut aller rechercher l'album, le serieId n'a alors pas d'importance
+      //           if ($stateParams.albumNr) {
+      //             for (var i=0; i < $scope.albums.length; i++) {
+      //               if (res.album.numero == $stateParams.albumNr) {
+      //                 $scope.album = res.album[i];
+      //                 break;
+      //               }
+      //             }
+      //           }
+      //         })
+      //         .catch(function (err) {
+      //           $state.go('errorModal', {
+      //             msg: "Impossible d'accéder à la liste des séries" + err.JSONstringify
+      //           });
+      //         });
+      //   }
       // });
 
       $scope.createAlbum = function() {
-        $state.go('app.album',{
-          serieId: $scope.id
+        $state.go('app.serie.album',{
+          "serieId": $scope.id,
+          "albumNr": ""
         });
       };
 
       $scope.deleteAlbum = function(album) {
-        CRUDService.deleteItem(album,"album")
-        .then(function res(){
-          // $state.go('confirmModal', {
-          //   msg: "Album effacé"
-          // });
-          CRUDService.getList("album","listAlbumsBySerieId",{startkey:[$scope.id,0],endkey:[$scope.id,1000000]})
-            .then(function(resalbums) {
-              $scope.albums = resalbums;
-              $log.info('SerieCtrl - Albums : ' + JSON.stringify($scope.albums));
-            })
-            .catch(function (err) {
-              $state.go('errorModal', {msg: "Impossible d'accéder aux albums de la série" + err.JSONstringify});
-            });
+        for (var i=0; i < $scope.serie.albums.length; i++) {
+          if ($scope.serie.albums[i].numero == album.numero) {
+            $scope.serie.albums.splice(i,1);
+            // delete $scope.serie.albums[i];
+            // // la longueur de l'array ne semble pas se mettre à jour automatiquement ???
+            // $scope.serie.albums.length--;
+            break;
+          }
+        }
+        CRUDService.updateItem($scope.serieId,$scope.serieRev,$scope.serie,"serie")
+        .then(function(res) {
           var alertPopup = $ionicPopup.alert({
             title: 'Confirmation',
-            template: 'Album effacé'
+            template: 'Album mis à jour'
           });
           alertPopup.then(function(res) {
-            console.log('après popup');
+            $state.go('app.serie', {
+              serieId: $scope.serieId
+            });
           });
         });
       };
 
       $scope.editAlbum = function(album) {
-          $state.go('app.album', {
-            serieId : "",
-            albumId : album._id
+          $state.go('app.serie.album', {
+            serieId : $scope.id,
+            albumNr : album.numero
           });
       };
 
@@ -404,31 +435,115 @@ angular.module('BDLibApp.controllers', ['ui.router'])
     function (CRUDService, GenreService, $scope, $ionicModal, $ionicPopup, $state, $log, $stateParams) {
 
       $scope.album = {};
-      $scope.album.serieId = ($stateParams.serieId) ?  $stateParams.serieId : "";
-      $scope.album._id = ($stateParams.albumId) ? $stateParams.albumId : null;
+      $scope.serieId = ($stateParams.serieId) ?  $stateParams.serieId : "";
+      $scope.albumNr = ($stateParams.albumNr) ? $stateParams.albumNr : null;
+      $log.info('AlbumCtrl - serieId / albumNr : ' + $scope.serieId + " / "+$scope.albumNr);
 
-      if ($stateParams.serieId) {
-        $scope.comingFromSerie = true;
-      } else {
-        $scope.comingFromSerie = false;
-      }
-      // si le serieId existe, on souhaite alors créer un nouvel album appartenant à une série. L'albumId est alors null
-      // if ($scope.serieId) {
-      // }
+      if ($scope.serieId) {
+        // Charger la série identifiée par son serieId
+        CRUDService.getItem($scope.serieId,"serie")
+          .then(function (res) {
+            // Update UI (almost) instantly
+            $scope.serie = res.serie;
+            $scope._id=res._id;
+            $scope._rev=res._rev;
+            $log.info('AlbumCtrl - serie : ' + JSON.stringify($scope.serie));
 
-      // Aller rechercher la liste des séries pour pouvoir associer l'album à une série ou updater la série à laquelle appartient l'album
-      CRUDService.getList("serie","filterOnSerie")
-        .then(function (result) {
-          $scope.serieList=result;
-          // si l'albumId existe, il faut aller rechercher l'album, le serieId n'a alors pas d'importance
-          if ($scope.album._id) {
-            CRUDService.getItem($scope.album._id,"album")
+            // si serieId et albumNr existent, on vient du state 'serie' et on a sélectionné un album pour modification
+            if($scope.albumNr) {
+              // charger l'album sélectionner dans le scope
+              if ($scope.albumNr && $scope.serie.albums) {
+                for (var i=0; i < $scope.serie.albums.length; i++) {
+                  if ($scope.serie.albums[i].numero == $scope.albumNr) {
+                    $scope.album = res.serie.albums[i];
+                    $scope.oldAlbumNr = $scope.serie.albums[i].numero;
+                    break;
+                  }
+                }
+              }
+            }
+          })
+          .catch(function (err) {
+            $state.go('errorModal', {
+              msg: "Impossible d'accéder aux données de l'album" + err.JSONstringify
+            });
+          });
+        }
+        // else {
+        //   // si serieId existe et albumNr n'existe pas, on vient du state 'serie' et on veut créer un nouvel album
+        //   // rien à faire
+        // }
+
+      // si serieId et albumNr n'existent pas, on vient du menu album pour créer un nouvel album
+      if (!$scope.serieId) {
+        // Charger la liste des séries dans le scope
+        CRUDService.getList("serie","filterOnSerie")
+          .then(function (result) {
+            $scope.serieList=result;
+          })
+          .catch(function (err) {
+            $state.go('errorModal', {
+              msg: "Impossible d'accéder à la liste des séries" + err.JSONstringify
+            });
+          });
+        }
+
+      $scope.addAlbum = function() {
+          var duplicate = false;
+          if (!$scope.serieId) {
+            // fetch serie based on serieId
+            CRUDService.getItem($scope.album.serieId,"serie")
               .then(function (res) {
                 // Update UI (almost) instantly
-                $scope.album = res.album;
+                $scope.serie = res.serie;
                 $scope._id=res._id;
+                $scope.serieId=res._id;                
                 $scope._rev=res._rev;
-                $log.info('AlbumCtrl - Album : ' + JSON.stringify($scope.album));
+                // Contrôler qu'il n'a a pas déjà un album portant le même numéro
+                if ($scope.serie.albums) {
+                  for (var i=0; i < $scope.serie.albums.length; i++) {
+                    if ($scope.serie.albums[i].numero == $scope.album.numero) {
+                      // album avec le même numéro trouvé => doublon => générer message d'erreur
+                      duplicate=true;
+                    }
+                  }
+                } else {
+                  $scope.serie.albums = [];
+                }
+
+                if (!duplicate) {
+                  delete $scope.album.serieId;
+                  $scope.serie.albums.push($scope.album);
+                  CRUDService.updateItem($scope._id, $scope._rev,$scope.serie,"serie")
+                  .then(function(res) {
+                    if ($scope.comingFromSerie) {
+                        $log.info('AlbumCtrl - going back to serie screen');
+                        $state.go('app.serie', {
+                          "serieId" : $scope.serieId
+                        },{reload:true});
+                        // $log.info('AlbumCtrl - reloading app.serie state');
+                        // $state.reload('app.serie');
+                    } else {
+                      // go back home in case album is created without coming from the Serie screen
+                      var alertPopup = $ionicPopup.alert({
+                        title: 'Confirmation',
+                        template: 'Album créé'
+                      });
+                      alertPopup.then(function(res) {
+                        $state.go('app.serie', {
+                          serieId: $scope.serieId
+                        });
+                      });
+                    }
+                  });
+                } else {
+                  var alertPopup = $ionicPopup.alert({
+                    title: 'Erreur',
+                    template: "<style>.popup-head { background-color : red; }</style>Le numéro de l'album existe déjà"
+                  });
+                  alertPopup.then(function(res) {
+                  });
+                }
               })
               .catch(function (err) {
                 $state.go('errorModal', {
@@ -436,43 +551,103 @@ angular.module('BDLibApp.controllers', ['ui.router'])
                 });
               });
           }
-        })
-        .catch(function (err) {
-          $state.go('errorModal', {
-            msg: "Impossible d'accéder à la liste des séries" + err.JSONstringify
-          });
-        });
 
-      $scope.addAlbum = function() {
-          delete $scope.album._id;
-          CRUDService.addItem($scope.album,"album")
-          .then(function(res) {
-            if ($scope.comingFromSerie) {
-                $log.info('AlbumCtrl - going back to serie screen');
-                $state.go('app.serie', {
-                  "id" : $scope.album.serieId
-                },{reload:true});
-                // $log.info('AlbumCtrl - reloading app.serie state');
-                // $state.reload('app.serie');
-            } else {
-              // go back home in case album is created without coming from the Serie screen
-              var alertPopup = $ionicPopup.alert({
-                title: 'Confirmation',
-                template: 'Album créé'
-              });
-              alertPopup.then(function(res) {
-                $state.go('home');
-              });
+          // Contrôler qu'il n'a a pas déjà un album portant le même numéro
+          if ($scope.serie.albums) {
+            for (var i=0; i < $scope.serie.albums.length; i++) {
+              if ($scope.serie.albums[i].numero == $scope.album.numero) {
+                // album avec le même numéro trouvé => doublon => générer message d'erreur
+                duplicate=true;
+                $state.go('errorModal', {
+                  msg: "Le numéro de l'album existe déjà"
+                });
+              }
             }
-          });
+          } else {
+            $scope.serie.albums = [];
+          }
+
+          if (!duplicate) {
+            delete $scope.album.serieId;
+            $scope.serie.albums.push($scope.album);
+            CRUDService.updateItem($scope._id, $scope._rev,$scope.serie,"serie")
+            .then(function(res) {
+              if ($scope.comingFromSerie) {
+                  $log.info('AlbumCtrl - going back to serie screen');
+                  $state.go('app.serie', {
+                    "serieId" : $scope.serieId
+                  },{reload:true});
+                  // $log.info('AlbumCtrl - reloading app.serie state');
+                  // $state.reload('app.serie');
+              } else {
+                // go back home in case album is created without coming from the Serie screen
+                var alertPopup = $ionicPopup.alert({
+                  title: 'Confirmation',
+                  template: 'Album créé'
+                });
+                alertPopup.then(function(res) {
+                  $state.go('app.serie', {
+                    serieId: $scope.serieId
+                  });
+                });
+              }
+            });
+          }  else {
+            var alertPopup = $ionicPopup.alert({
+              title: 'Erreur',
+              template: "<style>.popup-head { background-color : red; }</style>Le numéro de l'album existe déjà"
+            });
+            alertPopup.then(function(res) {
+            });
+          }
       };
 
       $scope.deleteAlbum = function() {
-          CRUDService.deleteItem($scope.album._id,"album");
+        for (var i=0; i < $scope.serie.albums.length; i++) {
+          if ($scope.serie.albums[i].numero == $scope.album.numero) {
+            delete $scope.serie.albums[i];
+            break;
+          }
+        }
+        CRUDService.deleteItem($scope.serieId,"serie")
+        .then(function(res) {
+          var alertPopup = $ionicPopup.alert({
+            title: 'Confirmation',
+            template: 'Album mis à jour'
+          });
+          alertPopup.then(function(res) {
+            $state.go('app.serie', {
+              serieId: $scope.serieId
+            });
+          });
+        });
       };
 
       $scope.updateAlbum = function() {
-          CRUDService.updateItem($scope._id, $scope._rev,album,"album");
+        // Si l'ancien numéro est différent, contrôler qu'il n'y pas de doublon
+        if ($scope.oldAlbumNr != $scope.albumNr) {
+          // Contrôler qu'il n'a a pas déjà un album portant le même numéro
+          for (var i=0; i < $scope.serie.albums.length; i++) {
+            if ($scope.serie.albums[i].numero == $scope.album.numero) {
+              // album avec le même numéro trouvé => doublon => générer message d'erreur
+              $state.go('errorModal', {
+                msg: "Le numéro de l'album existe déjà"
+              });
+            }
+          }
+        }
+        CRUDService.updateItem($scope._id, $scope._rev,$scope.serie,"serie")
+        .then(function(res) {
+          var alertPopup = $ionicPopup.alert({
+            title: 'Confirmation',
+            template: 'Album mis à jour'
+          });
+          alertPopup.then(function(res) {
+            $state.go('app.serie', {
+              serieId: $scope.serieId
+            });
+          });
+        });
       };
 
       $scope.createAlbum = function() {
