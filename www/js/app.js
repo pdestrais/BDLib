@@ -38,7 +38,8 @@ angular.module('BDLibApp', ['ionic', 'BDLibApp.controllers', 'BDLibApp.services'
 		url : '/home',
 		views : {
 			appContent : {
-				templateUrl : 'pages/home.html'
+				templateUrl : 'pages/home.html',
+				controller : 'HomeCtrl'
 			}
 		}
 	})

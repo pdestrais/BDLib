@@ -10,7 +10,7 @@
             </div>
             <label ng-class="{ 'has-errors' : albumForm.numero.$invalid && !albumForm.numero.$pristine , 'no-errors' : albumForm.numero.$valid }" ng-messages-include="error-list.html" style="" name="numero" class="item item-input">
                 <span class="input-label">numero</span>
-                <input placeholder="Numéro" name="numero" type="number" value="1" min="1" step="1" ng-model="album.numero" required>
+                <input placeholder="Numéro" name="numero" type="text" value="1" ng-model="album.numero" required>
             </label>
             <div class="error-container" ng-show="albumForm.numero.$error" ng-messages="albumForm.numero.$error" ng-messages-include="error-list.html">
             </div>
@@ -26,6 +26,14 @@
                 <span class="input-label">Scenariste</span>
                 <input placeholder="Scénariste" type="text" ng-model="album.scenariste">
             </label>
+            <label style="" name="ISBN" class="item item-input">
+                <span class="input-label">Numéro ISBN</span>
+                <input placeholder="Scénariste" type="text" ng-model="album.ISBN">
+            </label>
+            <label style="" name="editeur" class="item item-select">
+                <span class="input-label">Editeur</span>
+                <select ng-options="item.editeur.nom as item.editeur.nom for item in editeurList" name="editeur" ng-model="album.editeur"></select>
+            </label>
             <label style="" name="estimation" class="item item-input">
                 <span class="input-label">Estimation</span>
                 <input placeholder="Estimation de prix" type="number" min="0" ng-model="album.estimation">
@@ -38,6 +46,10 @@
                 <span class="input-label">Date d'achat</span>
                 <input placeholder="Date d'achat" type="date" ng-model="album.dateAchat">
             </label>
+            <label style="" name="dateParution" class="item item-input">
+                <span class="input-label">Date de parution</span>
+                <input placeholder="Date de parution" type="text" ng-model="album.dateParution">
+            </label>
             <label style="" name="pret" class="item item-input">
                 <span class="input-label">Preté à</span>
                 <input placeholder="Prêté à" type="text" ng-model="album.pret">
@@ -46,7 +58,7 @@
                 <span class="input-label">Commentaire</span>
                 <input placeholder="Commentaire" type="text" ng-model="album.commentaire">
             </label>
-            <label ng-if="!serieId" style="" name="serie" class="item item-select">
+            <label style="" name="serie" class="item item-select">
                 <span class="input-label">Série</span>
                 <select ng-options="item._id as item.serie.nom for item in serieList" name="serie" ng-model="album.serieId"></select>
             </label>

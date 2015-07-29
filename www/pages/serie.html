@@ -22,7 +22,7 @@
 						Appuyez sur <i class="icon ion-ios-plus-outline"></i> pour ajouter un élément à la liste
 					</ion-item>
 
-					<ion-item click-for-options ng-repeat="item in albums track by item.nom" item="item" item-type="item item-icon-left">
+					<ion-item click-for-options ng-repeat="item in albums track by item.numero" item="item" item-type="item item-icon-left">
 			  					{{item.numero}}. {{ item.nom }}
 					    <ion-option-button class="button-assertive" on-tap="deleteAlbum(item)">Effacer</ion-option-button>
 					    <ion-option-button class="button-calm" on-tap="editAlbum(item)">Editer</ion-option-button>

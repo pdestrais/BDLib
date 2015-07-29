@@ -1,19 +1,18 @@
 <ion-view style="" title="BD Lib">
             <ion-content style="" class="has-header" padding="true">
                 <div style="" class="button-bar">
-
-<!-- 					<a style="" class="button button-stable button-block" href="/app/albums">Album</a>
-                    <a style="" class="button button-stable button-block" href="/app/series">Série</a>
-                    <a style="" class="button button-stable button-block" href="/app/editeurs">Editeur</a>
- -->
 					</div>
                 <form style="">
-                    <ion-list style="">
-                        <label style="" name="Search" class="item item-input">
-                            <i class="icon ion-search placeholder-icon"></i>
-                            <input placeholder="Rechercher Album" type="search">
-                        </label>
-                    </ion-list>
+                  <label style="" name="Search" class="item item-input">
+                      <i class="icon ion-search placeholder-icon"></i>
+                      <input placeholder="Rechercher Album" type="search" ng-change="search()" ng-model="data.search">
+                  </label>
+                  <ion-list style="">
+                    <ion-item ng-repeat="album in data.albums" href="#/app/serie/{{album.serieId}}/album/{{album.numero}}">{{album.nom}}</li>
+                  </ion-list>
                 </form>
+                <!-- <button class="button button-positive" on-tap="import()">
+                  Importer données
+                </button> -->
             </ion-content>
 </ion-view>

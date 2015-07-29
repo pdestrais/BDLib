@@ -1,36 +1,5 @@
 angular.module('BDLibApp.services', [])
 
-/**
- * A simple example service that returns some data.
- */
-.factory('GenreService', ['ngPouch', '$q', '$log', function (ngPouch, $q, $log) {
-
-			var cache = cache || [];
-			var srv = {
-				getList : function () {
-					if (cache && cache.length>0) {
-						return cache;
-					} else {
-						var defer = $q.defer();
-						ngPouch.db.query('filterOnGenre')
-						.then(function (result) {
-							$log.debug("GenreService - query result : " + JSON.stringify(result));
-							angular.forEach(result.rows, function (value, index) {
-								cache.push(value.value);
-							});
-							defer.resolve(cache);
-						}).catch (function (err) {
-							$log.error("GenreService - getList error " + JSON.stringify(err));
-							defer.reject(err);
-						});
-						return defer.promise;
-					}
-				}
-			};
-			return srv;
-		}
-	])
-
 	.factory('CRUDService', ['ngPouch', '$log', '$q', function (ngPouch, $log, $q) {
 
 				var srv = {
@@ -130,9 +99,10 @@ angular.module('BDLibApp.services', [])
 	.factory('ViewsService', ['ngPouch', '$log', '$q', function (ngPouch, $log, $q) {
 
 			var srv = {
-				create : function () {
+				create : function (updateView) {
 						// Creation des view dans DB locale
-						var updateView = false;
+						if (!updateView)
+							updateView = true;
 						if (updateView) {
 							$log.info("Création des vues ...");
 						}
@@ -148,7 +118,12 @@ angular.module('BDLibApp.services', [])
 								if (doc._rev) {
 									filterOnGenre._rev=doc._rev;
 								}
-								return ngPouch.db.put(filterOnGenre);
+								if (cleanText(doc.views.filterOnGenre.map) != cleanText(filterOnGenre.views.filterOnGenre.map)) {
+									$log.info("filterOnEditeur view updated");
+									return ngPouch.db.put(filterOnGenre);
+								} else {
+									return null;
+								}
 							}).catch(function (err) {
 								$log.error("filterOnGenre update problem"+JSON.stringify(err));
 							});
@@ -165,7 +140,12 @@ angular.module('BDLibApp.services', [])
 								if (doc._rev) {
 									filterOnEditeur._rev=doc._rev;
 								}
-								return ngPouch.db.put(filterOnEditeur);
+								if (cleanText(doc.views.filterOnEditeur.map) != cleanText(filterOnEditeur.views.filterOnEditeur.map)) {
+									$log.info("filterOnEditeur view updated");
+									return ngPouch.db.put(filterOnEditeur);
+								} else {
+									return null;
+								}
 							}).catch(function (err) {
 								if (err.message=="missing") {
 									ngPouch.db.post(filterOnEditeur)
@@ -182,7 +162,7 @@ angular.module('BDLibApp.services', [])
 
 						var filterOnSerie = createDesignDoc('filterOnSerie', function(doc) {
 																				if (doc.type=="serie") {
-																					emit(doc._id, doc);
+																					emit(doc.serie.nom, doc);
 																				}
 																			});
 						if (updateView) {
@@ -191,7 +171,12 @@ angular.module('BDLibApp.services', [])
 								if (doc._rev) {
 									filterOnSerie._rev=doc._rev;
 								}
-								return ngPouch.db.put(filterOnSerie);
+								if (cleanText(doc.views.filterOnSerie.map) != cleanText(filterOnSerie.views.filterOnSerie.map)) {
+									$log.info("filterOnSerie view updated");
+									return ngPouch.db.put(filterOnSerie);
+								} else {
+									return null;
+								}
 							}).catch(function (err) {
 								if (err.message=="missing") {
 									ngPouch.db.post(filterOnSerie)
@@ -217,7 +202,12 @@ angular.module('BDLibApp.services', [])
 								if (doc._rev) {
 									listAlbumsBySerieId._rev=doc._rev;
 								}
-								return ngPouch.db.put(listAlbumsBySerieId);
+								if (cleanText(doc.views.listAlbumsBySerieId.map) != cleanText(listAlbumsBySerieId.views.listAlbumsBySerieId.map)) {
+									$log.info("listAlbumsBySerieId view created");
+									return ngPouch.db.put(listAlbumsBySerieId);
+								} else {
+									return null;
+								}
 							}).catch(function (err) {
 								if (err.message=="missing") {
 									ngPouch.db.post(listAlbumsBySerieId)
@@ -236,6 +226,42 @@ angular.module('BDLibApp.services', [])
 			return srv;
 		}
 	])
+
+	.factory('SearchAlbumService',['$q','$timeout','CRUDService', function($q, $timeout,CRUDService) {
+
+	    var searchAlbums = function(searchFilter) {
+	        console.log('Searching albums for ' + searchFilter);
+					var albums = [];
+	        var deferred = $q.defer();
+					CRUDService.getList("serie","filterOnSerie")
+			      .then(function (result) {
+			        for (i=0;i<result.length;i++) {
+								if (result[i].serie.albums) {
+									for (j=0;j<result[i].serie.albums.length;j++) {
+										album = result[i].serie.albums[j];
+										album.serieId = result[i]._id;
+				            albums.push(album);
+				          }
+								}
+			        }
+							var matches = albums.filter( function(album) {
+					    	if(album.nom.toLowerCase().indexOf(searchFilter.toLowerCase()) !== -1 ) return true;
+					    });
+
+			        $timeout( function(){
+			           deferred.resolve( matches );
+			        }, 100);
+			      })
+			      .catch(function (err) {
+							deferred.reject(err);
+			      });
+	        return deferred.promise;
+	    };
+
+	    return {
+	        searchAlbums : searchAlbums
+	    };
+	}])
 
 
 	;
