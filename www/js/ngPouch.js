@@ -1,11 +1,11 @@
 'use strict';
 
 angular.module('ngPouch', ['ngStorage','pouchdb'])
-  .service('ngPouch', function($timeout, $localStorage, pouchDB) {
+  .service('ngPouch', function($timeout, $localStorage, pouchDB, $log) {
 
     var service =  {
       // Databases
-      db: new pouchDB("bdlibdev"),
+      db: new PouchDB("LocalDB"),
       remotedb: undefined,
 
       // Options
@@ -250,6 +250,29 @@ angular.module('ngPouch', ['ngStorage','pouchdb'])
         });
       },
 
+      resetAndSaveSettings: function(settings) {
+        var self = this;
+        self.disconnect();
+        self.db.destroy().then( function() {
+          $log.info('LocalDB destroyed');
+          self.db = new PouchDB("LocalDB");
+          $localStorage.pouchStatus = {};
+          $localStorage.session = {};
+//          self.init();
+          self.trackChanges();
+          self.saveSettings(settings);
+        })
+        .catch(function (err) {
+          $log.error('local DB not destroyed : '+JSON.stringify(err));
+        });
+      },
+
+      // Destroy and recreated local db and changes db
+      resetPHD: function() {
+          $localStorage.pouchStatus = {};
+          $localStorage.session = {};
+      },
+
       /*
        *  Private Methods
        */
@@ -389,7 +412,7 @@ angular.module('ngPouch', ['ngStorage','pouchdb'])
         }
         return obj;
       },
-      
+
       trackChanges: function() {
         var self = this;
         if (typeof self.changes === "object") {
@@ -540,4 +563,3 @@ angular.module('ngPouch', ['ngStorage','pouchdb'])
     service.init();
     return service
   });
-

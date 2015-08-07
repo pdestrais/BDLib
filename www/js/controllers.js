@@ -2,86 +2,45 @@ angular.module('BDLibApp.controllers', ['ui.router'])
 
   .controller('AppCtrl', ['ViewsService','$cacheFactory','ngPouch','$state','$scope', '$ionicSideMenuDelegate', function (ViewsService,$cacheFactory,ngPouch,$state,$scope, $ionicSideMenuDelegate) {
 
-    // setup local db and initialize views
-  	var cache = $cacheFactory('prefsCache');
-
-    ngPouch.db.get("serverUrl")
-    .then(function(doc) {
-      cache.put("serverUrl",doc.serverUrl);
-      ViewsService.create();
-    }).catch(function (err) {
-      if (err.message=="missing") {
-        // Si l'application n'a pas déjà été initialisée
-        // renvoyer vers la page de préférences
+      // check if remotedb has already been initialized
+      // if yes, create views, if not redirect to preferences page
+      if (ngPouch.getSettings().database === undefined) {
         $state.go('app.preferences',{
           init: 0
         });
+      } else {
+        ViewsService.create();
       }
-    });
-  }
+    }
   ])
 
-  .controller('PreferenceCtrl', ['$cacheFactory','ngPouch','$scope', '$log', function ($cacheFactory,ngPouch,$scope, $log) {
+  .controller('PreferenceCtrl', ['$cacheFactory','ngPouch','$ionicPopup', '$scope', '$state','$log', function ($cacheFactory,ngPouch, $ionicPopup, $scope, $state, $log) {
+      $scope.data = {};
 
-    var cache = $cacheFactory.get('prefsCache');
-
-    if (!cache.get("serverUrl")) {
-      // si serverUrl n'est pas initialisé, créer une valeur par défault
-      $scope.url = "http://localhost:5984/bdlibdev";
-      $scope.firstInit = true;
+      if (ngPouch.getSettings().database === undefined) {
+        // si l'applcation n'est pas initialisée, créer une valeur par défault
+        $scope.data.url = "http://localhost:5984/bdlibdev";
       } else {
         // sinon aller chercher la valeur sauvegardée précédemment
-        ngPouch.db.get("serverUrl")
-        .then(function(doc) {
-          $scope.url = doc.url;
-        });
+          $scope.data.url = ngPouch.getSettings().database;
       }
-      // creation de serverUrl pour la première initialisation
-      $scope.setRemoteUrl =function () {
-        var serverUrlDoc = {_id : "serverUrl", url : $scope.url};
-        ngPouch.db.put(serverUrlDoc);
-        cache.put("serverUrl",true);
-      };
 
       $scope.updateRemoteUrl = function () {
-        var serverUrlDoc = {_id : "serverUrl", url : $scope.url};
-        ngPouch.db.get("serverUrl")
-        .then(function(doc) {
-          // verifier que l'URL précédente est différente et si c'est le cas, detruire la base de donnée locale et re-initialiser la synchronization avec la nouvelle base distante
-          if (doc.url != $scope.url) {
-            if (doc._rev) {
-              serverUrlDoc._rev=doc._rev;
-              ngPouch.db.put(serverUrlDoc)
-              .then(function(doc) {
-                cache.put("serverUrl",true);
-                ngPouch.saveSettings({database:$scope.url,stayConnected: true });
-                ngPouch.reset();
-              })
-              .catch(function (err) {
-                $log.error("serverUrl pref create problem"+JSON.stringify(err));
+          if (ngPouch.getSettings().database != $scope.data.url) {
+              $log.info("PreferenceCtrl - ngPouch DB setting before "+JSON.stringify(ngPouch.getSettings())+' - after : '+$scope.data.url);
+              ngPouch.resetAndSaveSettings({database:$scope.data.url,stayConnected: true });
+              $log.info("db settings updated");
+              var alertPopup = $ionicPopup.alert({
+                title: 'Confirmation',
+                template: 'DB distante changée'
               });
-            } else {
-              $log.error("serverUrl pref create problem"+JSON.stringify(err));
-            }
-          }
-        }).catch(function (err) {
-          if (err.message=="missing") {
-            ngPouch.db.post(serverUrlDoc)
-            .then(function (response) {
-              ngPouch.saveSettings({database:$scope.url,stayConnected: true });
-              ngPouch.reset();
-              $log.info("serverUrl pref created");
-            }).catch(function (err) {
-              $log.error("serverUrl pref create problem"+JSON.stringify(err));
-            });
-          } else {
-            $log.error("serverUrl pref update problem"+JSON.stringify(err));
-          }
-        });
-//        ngPouch.saveSettings({database:'http://localhost:5984/bdlibdev',stayConnected: true });
-      };
+              alertPopup.then(function(res) {
+                $state.go('app.home');
+              });
+          };
+      }
 
-    }
+  }
   ])
 
   .controller('ConfirmCtrl', ['$scope', '$stateParams', function ($scope, $stateParams) {
@@ -190,6 +149,38 @@ angular.module('BDLibApp.controllers', ['ui.router'])
 
   .controller('SeriesCtrl', ['CRUDService', '$scope', '$ionicModal', '$state', '$log',
     function (CRUDService, $scope, $ionicModal, $state, $log) {
+
+      $scope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams){
+        $log.info('SeriesCtrl - stateChangeSuccess event');
+        switch (toState.name) {
+          case 'app.series' :
+            // Get list from storage
+            CRUDService.getList("serie","filterOnSerie")
+              .then(function (res) {
+                // Update UI (almost) instantly
+                $scope.list = res;
+              })
+              .catch(function (err) {
+                $state.go('errorModal', {
+                  msg: "Impossible d'accéder à la liste de séries " + JSON.stringify(err)
+                });
+              });
+
+              CRUDService.getList("genre","filterOnGenre")
+              .then(function (res) {
+                // Update UI (almost) instantly
+                $scope.genreList = res;
+                $log.info('SeriesCtrl - Genre list : ' + JSON.stringify($scope.genreList));
+              })
+              .catch(function (err) {
+                $state.go('errorModal', {
+                  msg: "Impossible d'accéder à la liste de genres " + JSON.stringify(err)
+                });
+              });
+            break;
+        }
+      });
+
       // Load the add / change dialog from the given template URL
       $ionicModal.fromTemplateUrl('pages/add-change-serie-dialog.html', function (modal) {
         $scope.addDialog = modal;
@@ -215,31 +206,6 @@ angular.module('BDLibApp.controllers', ['ui.router'])
         });
       };
 
-      // Get list from storage
-      CRUDService.getList("serie","filterOnSerie")
-        .then(function (res) {
-          // Update UI (almost) instantly
-          $scope.list = res;
-          $log.info('SeriesCtrl - Serie list : ' + JSON.stringify($scope.list));
-        })
-        .catch(function (err) {
-          $state.go('errorModal', {
-            msg: "Impossible d'accéder à la liste de séries " + JSON.stringify(err)
-          });
-        });
-
-        CRUDService.getList("genre","filterOnGenre")
-        .then(function (res) {
-          // Update UI (almost) instantly
-          $scope.genreList = res;
-          $log.info('SeriesCtrl - Genre list : ' + JSON.stringify($scope.genreList));
-        })
-        .catch(function (err) {
-          $state.go('errorModal', {
-            msg: "Impossible d'accéder à la liste de genres " + JSON.stringify(err)
-          });
-        });
-
       // Used to cache the empty form for Edit Dialog
       $scope.saveEmpty = function (form) {
         $scope.id = '';
@@ -256,7 +222,16 @@ angular.module('BDLibApp.controllers', ['ui.router'])
         CRUDService.addItem(newItem,"serie")
           .then(function (res) {
             // Update UI (almost) instantly
-            $scope.list.push(res);
+            CRUDService.getList("serie","filterOnSerie")
+              .then(function (res) {
+                // Update UI (almost) instantly
+                $scope.list = res;
+              })
+              .catch(function (err) {
+                $state.go('errorModal', {
+                  msg: "Impossible d'accéder à la liste de séries " + JSON.stringify(err)
+                });
+              });
             $scope.leaveAddChangeDialog();
           })
           .catch(function (err) {
@@ -296,8 +271,8 @@ angular.module('BDLibApp.controllers', ['ui.router'])
     }
   ])
 
-  .controller('SerieCtrl', ['CRUDService', 'GenreService', '$scope', '$ionicModal', '$ionicPopup', '$state', '$log', '$stateParams',
-    function (CRUDService, GenreService, $scope, $ionicModal, $ionicPopup, $state, $log, $stateParams) {
+  .controller('SerieCtrl', ['CRUDService', '$scope', '$ionicModal', '$ionicPopup', '$state', '$log', '$stateParams',
+    function (CRUDService, $scope, $ionicModal, $ionicPopup, $state, $log, $stateParams) {
 
       $scope.id = $stateParams.serieId;
       $scope.serie = $scope.serie || {};
@@ -334,61 +309,56 @@ angular.module('BDLibApp.controllers', ['ui.router'])
           });
       }
 
-      // $scope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams){
-      //   $log.info('SerieCtrl - stateChangeSuccess event');
-      //   switch (fromState.name) {
-      //     case 'app.series' :
-      //     case 'app.serie.album' :
-      //       if ($scope.serieId) {
-      //         CRUDService.getList("genre","filterOnGenre")
-      //           .then(function (res) {
-      //             // Update UI (almost) instantly
-      //             $scope.genreList = res;
-      //             $log.info('SerieCtrl - Genre list : ' + JSON.stringify($scope.genreList));
-      //             // Get list from storage - if this part is not done inside the then, this creates very strange effects and options are not correctly filled in
-      //             CRUDService.getItem($scope.serieId,"serie")
-      //               .then(function (res) {
-      //                 // Update UI (almost) instantly
-      //                 $scope.serie = res.serie;
-      //                 $scope.serieRev = res._rev;
-      //                 $scope.albums = res.serie.albums;
-      //                 $log.info('SerieCtrl - Serie : ' + JSON.stringify($scope.serie));
-      //               })
-      //               .catch(function (err) {
-      //                 $state.go('errorModal', {
-      //                   msg: "Impossible d'accéder aux données de la série" + JSON.stringify(err)
-      //                 });
-      //               });
-      //           })
-      //           .catch(function (err) {
-      //             $state.go('errorModal', {
-      //               msg: "Impossible d'accéder à la liste de genres " + JSON.stringify(err)
-      //             });
-      //           });
-      //       }
-      //       break;
-      //     case 'app.serie' :
-      //       // Aller rechercher la liste des séries pour pouvoir associer l'album à une série ou updater la série à laquelle appartient l'album
-      //       CRUDService.getList("serie","filterOnSerie")
-      //         .then(function (result) {
-      //           $scope.serieList=result;
-      //           // si l'albumId existe, il faut aller rechercher l'album, le serieId n'a alors pas d'importance
-      //           if ($stateParams.albumNr) {
-      //             for (var i=0; i < $scope.albums.length; i++) {
-      //               if (res.album.numero == $stateParams.albumNr) {
-      //                 $scope.album = res.album[i];
-      //                 break;
-      //               }
-      //             }
-      //           }
-      //         })
-      //         .catch(function (err) {
-      //           $state.go('errorModal', {
-      //             msg: "Impossible d'accéder à la liste des séries" + JSON.stringify(err)
-      //           });
-      //         });
-      //   }
-      // });
+      $scope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams){
+        $log.info('SerieCtrl - stateChangeSuccess event');
+        switch (fromState.name) {
+          case 'app.series' :
+          case 'app.serie.album' :
+            if ($scope.serieId) {
+              CRUDService.getList("genre","filterOnGenre")
+                .then(function (res) {
+                  // Update UI (almost) instantly
+                  $scope.genreList = res;
+                  $log.info('SerieCtrl - Genre list : ' + JSON.stringify($scope.genreList));
+                  // Get list from storage - if this part is not done inside the then, this creates very strange effects and options are not correctly filled in
+                  CRUDService.getItem($scope.serieId,"serie")
+                    .then(function (res) {
+                      // Update UI (almost) instantly
+                      $scope.serie = res.serie;
+                      $scope.serieRev = res._rev;
+                      $scope.albums = res.serie.albums;
+                      $log.info('SerieCtrl - Serie : ' + JSON.stringify($scope.serie));
+                    })
+                    .catch(function (err) {
+                      $state.go('errorModal', {
+                        msg: "Impossible d'accéder aux données de la série" + JSON.stringify(err)
+                      });
+                    });
+                })
+                .catch(function (err) {
+                  $state.go('errorModal', {
+                    msg: "Impossible d'accéder à la liste de genres " + JSON.stringify(err)
+                  });
+                });
+            }
+            break;
+        }
+      });
+
+      $scope.updateSerie = function() {
+        CRUDService.updateItem($scope.serieId,$scope.serieRev,$scope.serie,"serie")
+        .then(function(res) {
+          var alertPopup = $ionicPopup.alert({
+            title: 'Confirmation',
+            template: 'Série mise à jour'
+          });
+          alertPopup.then(function(res) {
+            $state.go('app.serie', {
+              serieId: $scope.serieId
+            });
+          });
+        });
+      };
 
       $scope.createAlbum = function() {
         $state.go('app.serie.album',{
@@ -431,8 +401,8 @@ angular.module('BDLibApp.controllers', ['ui.router'])
     }
   ])
 
-  .controller('AlbumCtrl', ['CRUDService', 'EditeurService', 'GenreService', '$scope', '$ionicModal', '$ionicPopup', '$state', '$log', '$stateParams',
-    function (CRUDService, EditeurService, GenreService, $scope, $ionicModal, $ionicPopup, $state, $log, $stateParams) {
+  .controller('AlbumCtrl', ['CRUDService', '$scope', '$ionicModal', '$ionicPopup', '$state', '$log', '$stateParams',
+    function (CRUDService, $scope, $ionicModal, $ionicPopup, $state, $log, $stateParams) {
 
       $scope.album = {};
       $scope.serieId = ($stateParams.serieId) ?  $stateParams.serieId : "";
@@ -442,6 +412,63 @@ angular.module('BDLibApp.controllers', ['ui.router'])
       CRUDService.getList("editeur","filterOnEditeur")
         .then(function (result) {
           $scope.editeurList=result;
+          if ($scope.serieId) {
+            // Charger la série identifiée par son serieId
+            CRUDService.getList("serie","filterOnSerie")
+              .then(function (result) {
+                $scope.serieList=result;
+                CRUDService.getItem($scope.serieId,"serie")
+                    .then(function (res) {
+                      // Update UI (almost) instantly
+                      $scope.serie = res.serie;
+                      $scope._id=res._id;
+                      $scope._rev=res._rev;
+                      $log.info('AlbumCtrl - serie : ' + JSON.stringify($scope.serie));
+
+                      // si serieId et albumNr existent, on vient du state 'serie' ou 'home' et on a sélectionné un album pour modification
+                      if($scope.albumNr) {
+                        // charger l'album sélectionné dans le scope
+                        if ($scope.albumNr && $scope.serie.albums) {
+                          for (var i=0; i < $scope.serie.albums.length; i++) {
+                            if ($scope.serie.albums[i].numero == $scope.albumNr) {
+                              $scope.album = res.serie.albums[i];
+                              $scope.album.serieId = $scope.serieId;
+                              $scope.oldAlbumNr = $scope.serie.albums[i].numero;
+                              break;
+                            }
+                          }
+                        }
+                      } else {
+                        // si serieId existe et albumNr n'existe pas, on vient du state 'serie' et on veut créer un nouvel album
+                        $scope.album.serieId = $scope.serieId;
+                      }
+                    })
+                    .catch(function (err) {
+                      $state.go('errorModal', {
+                        msg: "Impossible d'accéder aux données de l'album" + JSON.stringify(err)
+                      });
+                    });
+              })
+              .catch(function (err) {
+                $state.go('errorModal', {
+                  msg: "Impossible d'accéder à la liste des séries" + JSON.stringify(err)
+                });
+              });
+            }
+
+          // si serieId et albumNr n'existent pas, on vient du menu album pour créer un nouvel album
+          if (!$scope.serieId) {
+            // Charger la liste des séries dans le scope
+            CRUDService.getList("serie","filterOnSerie")
+              .then(function (result) {
+                $scope.serieList=result;
+              })
+              .catch(function (err) {
+                $state.go('errorModal', {
+                  msg: "Impossible d'accéder à la liste des séries" + JSON.stringify(err)
+                });
+              });
+          }
         })
         .catch(function (err) {
           $state.go('errorModal', {
@@ -449,63 +476,6 @@ angular.module('BDLibApp.controllers', ['ui.router'])
           });
         });
 
-      if ($scope.serieId) {
-        // Charger la série identifiée par son serieId
-        CRUDService.getList("serie","filterOnSerie")
-          .then(function (result) {
-            $scope.serieList=result;
-            CRUDService.getItem($scope.serieId,"serie")
-                .then(function (res) {
-                  // Update UI (almost) instantly
-                  $scope.serie = res.serie;
-                  $scope._id=res._id;
-                  $scope._rev=res._rev;
-                  $log.info('AlbumCtrl - serie : ' + JSON.stringify($scope.serie));
-
-                  // si serieId et albumNr existent, on vient du state 'serie' ou 'home' et on a sélectionné un album pour modification
-                  if($scope.albumNr) {
-                    // charger l'album sélectionné dans le scope
-                    if ($scope.albumNr && $scope.serie.albums) {
-                      for (var i=0; i < $scope.serie.albums.length; i++) {
-                        if ($scope.serie.albums[i].numero == $scope.albumNr) {
-                          $scope.album = res.serie.albums[i];
-                          $scope.album.serieId = $scope.serieId;
-                          $scope.oldAlbumNr = $scope.serie.albums[i].numero;
-                          break;
-                        }
-                      }
-                    }
-                  } else {
-                    // si serieId existe et albumNr n'existe pas, on vient du state 'serie' et on veut créer un nouvel album
-                    $scope.album.serieId = $scope.serieId;
-                  }
-                })
-                .catch(function (err) {
-                  $state.go('errorModal', {
-                    msg: "Impossible d'accéder aux données de l'album" + JSON.stringify(err)
-                  });
-                });
-          })
-          .catch(function (err) {
-            $state.go('errorModal', {
-              msg: "Impossible d'accéder à la liste des séries" + JSON.stringify(err)
-            });
-          });
-        }
-
-      // si serieId et albumNr n'existent pas, on vient du menu album pour créer un nouvel album
-      if (!$scope.serieId) {
-        // Charger la liste des séries dans le scope
-        CRUDService.getList("serie","filterOnSerie")
-          .then(function (result) {
-            $scope.serieList=result;
-          })
-          .catch(function (err) {
-            $state.go('errorModal', {
-              msg: "Impossible d'accéder à la liste des séries" + JSON.stringify(err)
-            });
-          });
-        }
 
       $scope.addAlbum = function() {
           var duplicate = false;
@@ -681,7 +651,9 @@ angular.module('BDLibApp.controllers', ['ui.router'])
     $scope.Model = $scope.Model || {Name : "xxx"};
   })
 
-  .controller('HomeCtrl', ['$scope','CRUDService', 'SearchAlbumService', '$log', '$state', function($scope, CRUDService, SearchAlbumService, $log, $state) {
+  .controller('HomeCtrl', ['$scope','CRUDService', 'SearchAlbumService', '$log', '$state', '$ionicHistory', function($scope, CRUDService, SearchAlbumService, $log, $state, $ionicHistory) {
+    $ionicHistory.clearHistory();
+
     // Chargement de tous les albums en mémoire pour recherche par substring (like '%mar%')
       $scope.data = { "albums" : [], "search" : '' };
       $scope.search = function() {

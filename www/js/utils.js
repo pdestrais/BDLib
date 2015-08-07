@@ -50,3 +50,9 @@ function fixedEncodeURIComponent (str) {
 function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
+
+function cleanText(textToClean) {
+  textToClean = textToClean.replace(/\t/g, '');
+  textToClean = textToClean.replace(/\n/g, '');
+  return textToClean;
+}

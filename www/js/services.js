@@ -99,129 +99,117 @@ angular.module('BDLibApp.services', [])
 	.factory('ViewsService', ['ngPouch', '$log', '$q', function (ngPouch, $log, $q) {
 
 			var srv = {
-				create : function (updateView) {
-						// Creation des view dans DB locale
-						if (!updateView)
-							updateView = true;
-						if (updateView) {
-							$log.info("Création des vues ...");
-						}
+				create : function () {
+						// Creation/update des view dans DB locale
+						$log.info("Vérification des vues ...");
 
 						var filterOnGenre = createDesignDoc('filterOnGenre', function(doc) {
 																				if (doc.type == "genre") {
 																					emit(doc._id, doc.genre.nom);
 																				}
 																			});
-						if (updateView) {
-							ngPouch.db.get(filterOnGenre._id)
-							.then(function(doc) {
-								if (doc._rev) {
-									filterOnGenre._rev=doc._rev;
-								}
-								if (cleanText(doc.views.filterOnGenre.map) != cleanText(filterOnGenre.views.filterOnGenre.map)) {
-									$log.info("filterOnEditeur view updated");
-									return ngPouch.db.put(filterOnGenre);
-								} else {
-									return null;
-								}
-							}).catch(function (err) {
-								$log.error("filterOnGenre update problem"+JSON.stringify(err));
-							});
-						}
+						ngPouch.db.get(filterOnGenre._id)
+						.then(function(doc) {
+							if (doc._rev) {
+								filterOnGenre._rev=doc._rev;
+							}
+							if (cleanText(doc.views.filterOnGenre.map) != cleanText(filterOnGenre.views.filterOnGenre.map)) {
+								$log.info("filterOnEditeur view updated");
+								return ngPouch.db.put(filterOnGenre);
+							} else {
+								return null;
+							}
+						}).catch(function (err) {
+							$log.error("filterOnGenre update problem"+JSON.stringify(err));
+						});
 
 						var filterOnEditeur = createDesignDoc('filterOnEditeur', function(doc) {
 																				if (doc.type=="editeur") {
 																					emit(doc._id, doc);
 																				}
 																			});
-						if (updateView) {
-							ngPouch.db.get(filterOnEditeur._id)
-							.then(function(doc) {
-								if (doc._rev) {
-									filterOnEditeur._rev=doc._rev;
-								}
-								if (cleanText(doc.views.filterOnEditeur.map) != cleanText(filterOnEditeur.views.filterOnEditeur.map)) {
-									$log.info("filterOnEditeur view updated");
-									return ngPouch.db.put(filterOnEditeur);
-								} else {
-									return null;
-								}
-							}).catch(function (err) {
-								if (err.message=="missing") {
-									ngPouch.db.post(filterOnEditeur)
-									.then(function (response) {
-										$log.info("filterOnEditeur view created");
-									}).catch(function (err) {
-										$log.error("filterOnEditeur view create problem"+JSON.stringify(err));
-									});
-								} else {
-									$log.error("filterOnEditeur view update problem"+JSON.stringify(err));
-								}
-							});
-						}
+						ngPouch.db.get(filterOnEditeur._id)
+						.then(function(doc) {
+							if (doc._rev) {
+								filterOnEditeur._rev=doc._rev;
+							}
+							if (cleanText(doc.views.filterOnEditeur.map) != cleanText(filterOnEditeur.views.filterOnEditeur.map)) {
+								$log.info("filterOnEditeur view updated");
+								return ngPouch.db.put(filterOnEditeur);
+							} else {
+								return null;
+							}
+						}).catch(function (err) {
+							if (err.message=="missing") {
+								ngPouch.db.post(filterOnEditeur)
+								.then(function (response) {
+									$log.info("filterOnEditeur view created");
+								}).catch(function (err) {
+									$log.error("filterOnEditeur view create problem"+JSON.stringify(err));
+								});
+							} else {
+								$log.error("filterOnEditeur view update problem"+JSON.stringify(err));
+							}
+						});
 
 						var filterOnSerie = createDesignDoc('filterOnSerie', function(doc) {
 																				if (doc.type=="serie") {
 																					emit(doc.serie.nom, doc);
 																				}
 																			});
-						if (updateView) {
-							ngPouch.db.get(filterOnSerie._id)
-							.then(function(doc) {
-								if (doc._rev) {
-									filterOnSerie._rev=doc._rev;
-								}
-								if (cleanText(doc.views.filterOnSerie.map) != cleanText(filterOnSerie.views.filterOnSerie.map)) {
-									$log.info("filterOnSerie view updated");
-									return ngPouch.db.put(filterOnSerie);
-								} else {
-									return null;
-								}
-							}).catch(function (err) {
-								if (err.message=="missing") {
-									ngPouch.db.post(filterOnSerie)
-									.then(function (response) {
-										$log.info("filterOnSerie view created");
-									}).catch(function (err) {
-										$log.error("filterOnSerie view create problem"+JSON.stringify(err));
-									});
-								} else {
-									$log.error("filterOnSerie view update problem"+JSON.stringify(err));
-								}
-							});
-						}
+						ngPouch.db.get(filterOnSerie._id)
+						.then(function(doc) {
+							if (doc._rev) {
+								filterOnSerie._rev=doc._rev;
+							}
+							if (cleanText(doc.views.filterOnSerie.map) != cleanText(filterOnSerie.views.filterOnSerie.map)) {
+								$log.info("filterOnSerie view updated");
+								return ngPouch.db.put(filterOnSerie);
+							} else {
+								return null;
+							}
+						}).catch(function (err) {
+							if (err.message=="missing") {
+								ngPouch.db.post(filterOnSerie)
+								.then(function (response) {
+									$log.info("filterOnSerie view created");
+								}).catch(function (err) {
+									$log.error("filterOnSerie view create problem"+JSON.stringify(err));
+								});
+							} else {
+								$log.error("filterOnSerie view update problem"+JSON.stringify(err));
+							}
+						});
 
 						var listAlbumsBySerieId = createDesignDoc('listAlbumsBySerieId', function(doc) {
 																				if (doc.type=="album") {
 																					emit([doc.album.serieId,doc.album.numero], doc.album);
 																				}
 																			});
-						if (updateView) {
-							ngPouch.db.get(listAlbumsBySerieId._id)
-							.then(function(doc) {
-								if (doc._rev) {
-									listAlbumsBySerieId._rev=doc._rev;
-								}
-								if (cleanText(doc.views.listAlbumsBySerieId.map) != cleanText(listAlbumsBySerieId.views.listAlbumsBySerieId.map)) {
+						ngPouch.db.get(listAlbumsBySerieId._id)
+						.then(function(doc) {
+							if (doc._rev) {
+								listAlbumsBySerieId._rev=doc._rev;
+							}
+							if (cleanText(doc.views.listAlbumsBySerieId.map) != cleanText(listAlbumsBySerieId.views.listAlbumsBySerieId.map)) {
+								$log.info("listAlbumsBySerieId view created");
+								return ngPouch.db.put(listAlbumsBySerieId);
+							} else {
+								return null;
+							}
+						}).catch(function (err) {
+							if (err.message=="missing") {
+								ngPouch.db.post(listAlbumsBySerieId)
+								.then(function (response) {
 									$log.info("listAlbumsBySerieId view created");
-									return ngPouch.db.put(listAlbumsBySerieId);
-								} else {
-									return null;
-								}
-							}).catch(function (err) {
-								if (err.message=="missing") {
-									ngPouch.db.post(listAlbumsBySerieId)
-									.then(function (response) {
-										$log.info("listAlbumsBySerieId view created");
-									}).catch(function (err) {
-										$log.error("listAlbumsBySerieId view create problem"+JSON.stringify(err));
-									});
-								} else {
-									$log.error("listAlbumsBySerieId view update problem"+JSON.stringify(err));
-								}
-							});
-						}
-				}
+								}).catch(function (err) {
+									$log.error("listAlbumsBySerieId view create problem"+JSON.stringify(err));
+								});
+							} else {
+								$log.error("listAlbumsBySerieId view update problem"+JSON.stringify(err));
+							}
+						});
+					}
 			};
 			return srv;
 		}

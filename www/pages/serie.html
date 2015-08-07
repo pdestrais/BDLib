@@ -10,6 +10,7 @@
 						<span class="input-label">genre</span>
 						<select ng-options="item for item in genreList" name="genre" ng-model="serie.genre"></select>
 				</label>
+				<button ng-if="form.$dirty" class="button button-block button-positive" on-tap="updateSerie()">Mettre à jour série</button>
 				<input type="hidden" name="id" ng-model="serie.id" />
 
 				<!-- test for nested views -->

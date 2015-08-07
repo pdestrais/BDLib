@@ -6,17 +6,21 @@
                     <a style="" class="button button-stable button-block" href="/app/series">Série</a>
                     <a style="" class="button button-stable button-block" href="/app/editeurs">Editeur</a>
  -->
-					</div>
-                <form style="">
-                    <ion-list style="">
+                <form name="prefsForm" style="">
+                    <!-- <ion-list style=""> -->
                         Url Serveur distant</br>
                         <label style="" name="remoteServerUrl" class="item item-input">
-                            <input placeholder="URL server DB" type="text" value={{url}}>
+                            <input placeholder="URL server DB" type="text" ng-model="data.url">
                         </label>
-                    </ion-list>
+                        <!-- autre Serveur distant</br>
+                        <label style="" name="altremoteServerUrl" class="item item-input">
+                            <input placeholder="autre URL server DB" type="text" ng-model="alturl">
+                        </label> -->
+                    <!-- </ion-list> -->
                     <ion-button class="button button-block button-positive" ng-click="updateRemoteUrl()">
                           Enregistrer
                     </ion-button>
                 </form>
+              </div>
             </ion-content>
 </ion-view>

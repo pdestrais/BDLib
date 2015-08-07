@@ -7,7 +7,7 @@
 // 'starter.controllers' is found in controllers.js
 angular.module('BDLibApp', ['ionic', 'BDLibApp.controllers', 'BDLibApp.services', 'BDLibApp.directives', 'ngPouch', 'ngMessages'])
 
-.run(function ($ionicPlatform,ngPouch,GenreService,$log,$cacheFactory) {
+.run(function ($ionicPlatform,ngPouch,$log,$cacheFactory) {
 	$ionicPlatform.ready(function () {
 		// Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
 		// for form inputs)
@@ -19,10 +19,6 @@ angular.module('BDLibApp', ['ionic', 'BDLibApp.controllers', 'BDLibApp.services'
 			StatusBar.styleDefault();
 		}
 	});
-
-	//put series's genre into cache
-	GenreService.getList();
-
 
 })
 
