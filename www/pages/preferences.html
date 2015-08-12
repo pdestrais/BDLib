@@ -1,11 +1,5 @@
 <ion-view style="" title="Preferences">
             <ion-content style="" class="has-header" padding="true">
-                <div style="" class="button-bar">
-
-<!-- 					<a style="" class="button button-stable button-block" href="/app/albums">Album</a>
-                    <a style="" class="button button-stable button-block" href="/app/series">Série</a>
-                    <a style="" class="button button-stable button-block" href="/app/editeurs">Editeur</a>
- -->
                 <form name="prefsForm" style="">
                     <!-- <ion-list style=""> -->
                         Url Serveur distant</br>
@@ -17,10 +11,9 @@
                             <input placeholder="autre URL server DB" type="text" ng-model="alturl">
                         </label> -->
                     <!-- </ion-list> -->
-                    <ion-button class="button button-block button-positive" ng-click="updateRemoteUrl()">
+                    <ion-button class="button button-full button-positive" ng-click="updateRemoteUrl()">
                           Enregistrer
                     </ion-button>
                 </form>
-              </div>
             </ion-content>
 </ion-view>

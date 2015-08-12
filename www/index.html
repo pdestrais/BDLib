@@ -15,10 +15,13 @@
     <link href="/css/preview-frame.css" rel="stylesheet">
     <link href="lib/ionic/css/ionic.css" rel="stylesheet">
     <link href="css/BDLib.css" rel="stylesheet">
+    <link href="lib/ionic-material/dist/ionic.material.min.css" rel="stylesheet">
+
 
     <!-- ionic/angularjs js -->
      <script src="lib/ionic/js/ionic.bundle.js"></script>
-	 <script src="lib/pouchdb/dist/pouchdb-3.4.0.js"></script>
+     <script src="lib/ionic-material/dist/ionic.material.min.js"></script>
+	 <script src="lib/pouchdb/dist/pouchdb-3.6.0.js"></script>
 	 <script src="lib/angular-pouchdb/angular-pouchdb.js"></script>
 	 <script src="lib/ngstorage/ngStorage.js"></script>
    <script src="lib/angular-messages/angular-messages.js"></script>
@@ -34,6 +37,7 @@
 
   </head>
   <body ng-app="BDLibApp" animation="slide-left-right-ios7">
+    <div id="custom-overlay"><img src="img/bededb.png" height="400" width="250"></div>
     <!--
       The views will be rendered in the <ion-nav-view> directive below
       Templates are in the /templates folder (but you could also

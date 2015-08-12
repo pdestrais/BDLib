@@ -654,6 +654,12 @@ angular.module('BDLibApp.controllers', ['ui.router'])
   .controller('HomeCtrl', ['$scope','CRUDService', 'SearchAlbumService', '$log', '$state', '$ionicHistory', function($scope, CRUDService, SearchAlbumService, $log, $state, $ionicHistory) {
     $ionicHistory.clearHistory();
 
+    $scope.$on('$ionicView.afterEnter', function(){
+      setTimeout(function(){
+        document.getElementById("custom-overlay").style.display = "none";
+      }, 3000);
+    });
+
     // Chargement de tous les albums en mémoire pour recherche par substring (like '%mar%')
       $scope.data = { "albums" : [], "search" : '' };
       $scope.search = function() {

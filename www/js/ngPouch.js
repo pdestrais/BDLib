@@ -449,21 +449,27 @@ angular.module('ngPouch', ['ngStorage','pouchdb'])
         self.storeReplicationFromEvent(info, event);
         switch (event) {
           case "uptodate":
+            $log.info("[ngPouch/handleReplicationFrom]Received uptodate event");
             self.maxOutProgressiveDelay();
             self.delaySessionStatus(800, "idle");
             break;
           case "error":
+            $log.info("[ngPouch/handleReplicationFrom]Received error event : "+JSON.stringify(event)  );
             self.restartProgressiveDelay();
             self.delaySessionStatus(800, "offline");
             break;
           case "complete":
+            $log.info("[ngPouch/handleReplicationFrom]Received complete event");
             //self.restartProgressiveDelay();
             //self.delaySessionStatus(800, "offline");
             break;
           case "change":
+            $log.info("[ngPouch/handleReplicationFrom]Received change event with info : "+JSON.stringify(info));
+            $log.info("[ngPouch/handleReplicationFrom]Received change event - session docReceived =  "+self.session.docsReceived);
             self.maxOutProgressiveDelay();
             if(info.docs_written > self.session.docsReceived){
               self.session.docsReceived = info.docs_written;
+              $log.info("[ngPouch/handleReplicationFrom]status receiving");
               self.setSessionStatus("receiving");
             }
             break
@@ -474,22 +480,28 @@ angular.module('ngPouch', ['ngStorage','pouchdb'])
         var self = this;
         switch (event) {
           case "uptodate":
+          $log.info("[ngPouch/handleReplicationTo]Received uptodate event");
             self.maxOutProgressiveDelay();
             self.resetLocalChanges();
             self.delaySessionStatus(800, "idle");
             break;
           case "error":
+          $log.info("[ngPouch/handleReplicationTo]Received error event : "+JSON.stringify(event));
             self.restartProgressiveDelay();
             self.delaySessionStatus(800, "offline");
             break;
           case "complete":
+          $log.info("[ngPouch/handleReplicationTo]Received complete event");
             //self.restartProgressiveDelay();
             //self.delaySessionStatus(800, "offline");
             break;
           case "change":
+          $log.info("[ngPouch/handleReplicationTo]Received change event with info : "+JSON.stringify(info));
+          $log.info("[ngPouch/handleReplicationTo]Received change event - session docReceived =  "+self.session.docsReceived);
             self.maxOutProgressiveDelay();
             if(info.docs_written > self.session.docsSent){
               self.session.docsSent = info.docs_written;
+              $log.info("[ngPouch/handleReplicationTo]status sending : ");
               self.setSessionStatus("sending");
             }
             break
@@ -518,6 +530,7 @@ angular.module('ngPouch', ['ngStorage','pouchdb'])
 
         if (typeof self.settings.database === "string")
         {
+          $log.info("[ngPouch/createRemoteDb] - connecting to remote DB @ "+this.settings.database);
           self.remotedb = new PouchDB(this.settings.database);
           if (typeof self.settings.username === "string" && typeof self.settings.password === "string")
           {
@@ -539,6 +552,7 @@ angular.module('ngPouch', ['ngStorage','pouchdb'])
 
       // Connect to Remote Database and Start Replication
       connect: function() {
+        $log.info("[ngPouch/connect] - connecting to remote DB and start replication");
         var self = this;
         self.session.docsSent = 0;
         self.session.docsReceived = 0;
