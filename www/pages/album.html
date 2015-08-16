@@ -28,7 +28,7 @@
             </label>
             <label style="" name="ISBN" class="item item-input">
                 <span class="input-label">Numéro ISBN</span>
-                <input placeholder="Scénariste" type="text" ng-model="album.ISBN">
+                <input placeholder="Numéro ISBN" type="text" ng-model="album.ISBN">
             </label>
             <label style="" name="editeur" class="item item-select">
                 <span class="input-label">Editeur</span>
@@ -57,6 +57,10 @@
             <label style="" name="commentaire" class="item item-input">
                 <span class="input-label">Commentaire</span>
                 <input placeholder="Commentaire" type="text" ng-model="album.commentaire">
+            </label>
+            <label style="" name="manquant" class="item item-input-wrapper">
+                <span class="input-label">Manquant</span>
+                <input placeholder="Manquant" type="checkbox" ng-model="album.manquant" ng-init="album.manquant=false">
             </label>
             <label style="" name="serie" class="item item-select">
                 <span class="input-label">Série</span>

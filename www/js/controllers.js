@@ -147,8 +147,8 @@ angular.module('BDLibApp.controllers', ['ui.router'])
     }
   ])
 
-  .controller('SeriesCtrl', ['CRUDService', '$scope', '$ionicModal', '$state', '$log',
-    function (CRUDService, $scope, $ionicModal, $state, $log) {
+  .controller('SeriesCtrl', ['CRUDService', '$scope', '$ionicModal', '$ionicPopup','$state', '$log',
+    function (CRUDService, $scope, $ionicModal, $ionicPopup, $state, $log) {
 
       $scope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams){
         $log.info('SeriesCtrl - stateChangeSuccess event');
@@ -243,11 +243,21 @@ angular.module('BDLibApp.controllers', ['ui.router'])
     };
 
       $scope.removeItem = function (item) {
-        // Search & Destroy item from list
-        $scope.list.splice($scope.list.indexOf(item), 1);
-        // Save list in factory
-        CRUDService.deleteItem(item,"serie");
-        // TODO - supprimer tous les albums de la série
+        // show confirmation dialog
+        var confirmPopup = $ionicPopup.confirm({
+          title: 'Confirmation',
+          template: 'Etes-vous sûr de supprimer la série ? Ceci supprimera tes les albums de la série également !!!'
+        });
+        confirmPopup.then(function(res) {
+          if(res) {
+            // Search & Destroy item from list
+            $scope.list.splice($scope.list.indexOf(item), 1);
+            // delete item from DB
+            CRUDService.deleteItem(item,"serie");
+          } else {
+            console.log('You are not sure');
+          }
+        });
       };
 
       $scope.showEditItem = function (item) {
