@@ -23,7 +23,7 @@
 						Appuyez sur <i class="icon ion-ios-plus-outline"></i> pour ajouter un élément à la liste
 					</ion-item>
 
-					<ion-item click-for-options ng-repeat="item in albums track by item.numero" item="item" item-type="item item-icon-left">
+					<ion-item click-for-options ng-repeat="item in albums track by item.numero+item.nom+item+dateParution" item="item" item-type="item item-icon-left">
 						<span ng-if="item.manquant" class="manquant">
 							{{item.numero}}. {{ item.nom }}
 						</span>

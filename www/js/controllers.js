@@ -37,9 +37,8 @@ angular.module('BDLibApp.controllers', ['ui.router'])
               alertPopup.then(function(res) {
                 $state.go('app.home');
               });
-          };
-      }
-
+          }
+      };
   }
   ])
 
@@ -660,6 +659,113 @@ angular.module('BDLibApp.controllers', ['ui.router'])
   .controller('BiblioCtrl', function ($scope) {
     $scope.Model = $scope.Model || {Name : "xxx"};
   })
+
+  .controller('ImportAlbumsCtrl', ['$scope','CRUDService','$ionicPopup','$state','$log', function ($scope, CRUDService,$ionicPopup,$state,$log) {
+//    $scope.data = $scope.data || {Name : "xxx"};
+    $scope.data = {};
+    $scope.added = 0;
+    $scope.updated = 0;
+    $scope.skipped = 0;
+    var totalLinesToProcess = 0;
+    var serieList;
+    var findSerieIdx = function(nomSerie){
+      for (i = 0; i < serieList.length; i++) {
+        if (serieList[i].serie.nom == nomSerie) {
+          return(i);
+          //return [serieList[i]];
+        }
+      }
+      // var newSerie = {type:"Serie",serie:{nom: nomSerie}};
+      // serieList.push(newSerie);
+      // return [];
+      return (-1);
+    };
+
+    $scope.importCSVData = function() {
+      var importedSerieList = [];
+      var updateSerieIdxList = [];
+      var importedData = Papa.parse($scope.data.csvData,{delimiter: ";"});
+      totalLinesToProcess = importedData.data.length;
+      // charger toutes les séries pour éviter de refaire une recherche sur le nom de série pour chaque ligne
+      CRUDService.getList("Serie","filterOnSerie")
+      .then(function(series){
+        importedData.data.forEach(function(element,index) {
+          var serie;
+          serieList = series;
+          // pour toutes les lignes autres que la première ligne contenant les headers des colonnes, on éxecute la fonction
+          if (!(index===0 && element[0]=="Série")) {
+              // rechercher nom de série dans la liste compléte des séries
+              // si la serie n'existe pas, créer la série et l'album
+              serieIdx = findSerieIdx(element[0]);
+              if (serieIdx == -1){
+                serie = {"nom":element[0],"albums":[{"numero":element[1],"nom":element[2],"editeur":element[3],"dateParution":element[4],"ISBN":element[6],"estimation":element[7]}]};
+                var newSerieDoc = {type:"Serie",serie:serie,status:"new"};
+                var newIdx = serieList.length;
+                serieList.push(newSerieDoc);
+                importedSerieList.push(newIdx);
+              } else // la serie existe, vérifier si l'album n'existe pas déjà.
+              {
+                // si il n'existe pas, ajouter l'album.
+                  var exist=false;
+                  serieList[serieIdx].serie.albums.forEach(function(el,ind){
+                    if (element[1]==el.numero && element[2]==el.nom && element[3]==el.dateParution)
+                      exist=true;
+                  });
+                  if (!exist) {
+                    album = {"numero":element[1],"nom":element[2],"editeur":element[3],"dateParution":element[4],"ISBN":element[6],"estimation":element[7]};
+                    serieList[serieIdx].serie.albums.push(album);
+                    // ajouter la série à la liste des séries à updater si elle ne fait pas déjà partie de cette liste ou si elle n'est pas nouvellement créée
+                    if (updateSerieIdxList.indexOf(serieIdx)==-1 && serieList[serieIdx].status===undefined)
+                      updateSerieIdxList.push(serieIdx);
+                    else {
+                      $scope.updated++;
+                    }
+                  } else {
+                    $scope.skipped++;
+                  }
+              }
+          } else {
+            // on traite la ligne contenant le nom des colonnes, il ne faut pas la compter dans le total des lignes à processer
+            totalLinesToProcess--;
+          }
+        });
+        for(i=0;i<importedSerieList.length;i++) {
+          CRUDService.addItem(serieList[importedSerieList[i]].serie,"Serie")
+          .then(function(){
+            $scope.added++;
+          })
+          .catch(function(){
+            $log.error("Erreur dans la création de la série et de l'album lors de l'import");
+          });
+        }
+        for(i=0;i<updateSerieIdxList.length;i++) {
+          serieDoc = serieList[updateSerieIdxList[i]];
+          CRUDService.updateItem(serieDoc._id, serieDoc._rev,serieDoc.serie,"Serie")
+          .then(function(){
+            $scope.updated++;
+          })
+          .catch(function(){
+            $log.error("Erreur dans la mise à jour de la série lors d'un ajout d'album lors de l'import");
+          });
+        }
+
+      });
+    };
+
+    $scope.$watch(function(){return($scope.added+$scope.updated+$scope.skipped);}, function(newValue, oldValue) {
+      if (totalLinesToProcess>0 && $scope.added+$scope.updated+$scope.skipped >= totalLinesToProcess) {
+        // afficher écran indiquant que le processus d'import est terminé plus le résultat
+        var alertPopup = $ionicPopup.alert({
+          title: 'Confirmation',
+          template: '<i>Résultat Import albums</i><br>'+$scope.added+' elements added<br>'+$scope.updated+' elements updated<br>'+$scope.skipped+' elements non importés'
+        });
+        alertPopup.then(function(res) {
+          $state.go('app.home');
+        });
+
+      }
+    });
+  }])
 
   .controller('HomeCtrl', ['$scope','CRUDService', 'SearchAlbumService', '$log', '$state', '$ionicHistory', function($scope, CRUDService, SearchAlbumService, $log, $state, $ionicHistory) {
     $ionicHistory.clearHistory();

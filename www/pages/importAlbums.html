@@ -1,0 +1,13 @@
+<ion-view style="" title="Import Albums">
+            <ion-content style="" class="has-header" padding="true">
+                <form name="importForm" style="">
+                    CSV Data à importer</br>
+                    <label style="" name="albumToImport" class="item item-input">
+                        <textarea placeholder="csv data to import" ng-model="data.csvData"></textarea>
+                    </label>
+                    <ion-button class="button button-full button-positive" ng-click="importCSVData()">
+                          Importer
+                    </ion-button>
+                </form>
+            </ion-content>
+</ion-view>

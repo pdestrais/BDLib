@@ -115,6 +115,16 @@ angular.module('BDLibApp', ['ionic', 'ionic-material', 'BDLibApp.controllers', '
 		}
 	})
 
+	.state('app.importAlbums', {
+		url : '/importAlbums',
+		views : {
+			appContent : {
+				templateUrl : 'pages/importAlbums.html',
+				controller : 'ImportAlbumsCtrl'
+			}
+		}
+	})
+
 	.state('app.biblio', {
 		url : '/biblio',
 		views : {
