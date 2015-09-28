@@ -1,4 +1,4 @@
-angular.module('BDLibApp.controllers', ['ui.router'])
+angular.module('BDLibApp.controllers', ['ui.router','angular.directives-round-progress'])
 
   .controller('AppCtrl', ['ViewsService','$cacheFactory','ngPouch','$state','$scope', '$ionicSideMenuDelegate', function (ViewsService,$cacheFactory,ngPouch,$state,$scope, $ionicSideMenuDelegate) {
 
@@ -662,10 +662,11 @@ angular.module('BDLibApp.controllers', ['ui.router'])
 
   .controller('ImportAlbumsCtrl', ['$scope','CRUDService','$ionicPopup','$state','$log', function ($scope, CRUDService,$ionicPopup,$state,$log) {
 //    $scope.data = $scope.data || {Name : "xxx"};
+    $scope.progressData = {
+      label: 0,
+      percentage: 0.0
+    };
     $scope.data = {};
-    $scope.added = 0;
-    $scope.updated = 0;
-    $scope.skipped = 0;
     var totalLinesToProcess = 0;
     var serieList;
     var findSerieIdx = function(nomSerie){
@@ -683,36 +684,59 @@ angular.module('BDLibApp.controllers', ['ui.router'])
 
     $scope.importCSVData = function() {
       var importedSerieList = [];
+      var importedEditeurList = [];
+      var editeurList = [];
       var updateSerieIdxList = [];
+      CRUDService.getList("editeur","filterOnEditeur")
+      .then(function(editeurs) {
+        editeurList=editeurs;
+      });
       var importedData = Papa.parse($scope.data.csvData,{delimiter: ";"});
+      $scope.added = 0;
+      $scope.updated = 0;
+      $scope.skipped = 0;
       totalLinesToProcess = importedData.data.length;
       // charger toutes les séries pour éviter de refaire une recherche sur le nom de série pour chaque ligne
       CRUDService.getList("Serie","filterOnSerie")
       .then(function(series){
         importedData.data.forEach(function(element,index) {
+          $log.info("[ImportController]importing element #"+index+JSON.stringify(element));
           var serie;
           serieList = series;
+          $scope.progressData.percentage = index/(totalLinesToProcess-1);
+          $scope.progressData.label = Math.round($scope.progressData.percentage*100);
+          $scope.$apply($scope.progressData);
           // pour toutes les lignes autres que la première ligne contenant les headers des colonnes, on éxecute la fonction
           if (!(index===0 && element[0]=="Série")) {
               // rechercher nom de série dans la liste compléte des séries
               // si la serie n'existe pas, créer la série et l'album
               serieIdx = findSerieIdx(element[0]);
+              if (editeurList.indexOf(element[3])==-1) {
+                importedEditeurList.push(element[3]);
+              }
               if (serieIdx == -1){
                 serie = {"nom":element[0],"albums":[{"numero":element[1],"nom":element[2],"editeur":element[3],"dateParution":element[4],"ISBN":element[6],"estimation":element[7]}]};
                 var newSerieDoc = {type:"Serie",serie:serie,status:"new"};
                 var newIdx = serieList.length;
                 serieList.push(newSerieDoc);
                 importedSerieList.push(newIdx);
+                //Si l'éditeur n'existe pas encore, l'ajouter à la liste des édituers
               } else // la serie existe, vérifier si l'album n'existe pas déjà.
               {
                 // si il n'existe pas, ajouter l'album.
                   var exist=false;
-                  serieList[serieIdx].serie.albums.forEach(function(el,ind){
-                    if (element[1]==el.numero && element[2]==el.nom && element[3]==el.dateParution)
-                      exist=true;
-                  });
+                  if (serieList[serieIdx].serie.albums === undefined)
+                    exist=false;
+                  else {
+                    serieList[serieIdx].serie.albums.forEach(function(el,ind){
+                      if (element[1]==el.numero && element[2]==el.nom && element[4]==el.dateParution)
+                        exist=true;
+                    });
+                  }
                   if (!exist) {
                     album = {"numero":element[1],"nom":element[2],"editeur":element[3],"dateParution":element[4],"ISBN":element[6],"estimation":element[7]};
+                    if (serieList[serieIdx].serie.albums === undefined)
+                      serieList[serieIdx].serie.albums=[];
                     serieList[serieIdx].serie.albums.push(album);
                     // ajouter la série à la liste des séries à updater si elle ne fait pas déjà partie de cette liste ou si elle n'est pas nouvellement créée
                     if (updateSerieIdxList.indexOf(serieIdx)==-1 && serieList[serieIdx].status===undefined)
@@ -748,7 +772,15 @@ angular.module('BDLibApp.controllers', ['ui.router'])
             $log.error("Erreur dans la mise à jour de la série lors d'un ajout d'album lors de l'import");
           });
         }
-
+        for (i=0;i<importedEditeurList.length;i++) {
+          CRUDService.addItem(importedEditeurList(i),"editeur")
+          .then(function(){
+            $scope.editeurAdded++;
+          })
+          .catch(function(){
+            $log.error("Erreur dans la création de l'éditeur lors de l'import");
+          });
+        }
       });
     };
 
@@ -757,12 +789,11 @@ angular.module('BDLibApp.controllers', ['ui.router'])
         // afficher écran indiquant que le processus d'import est terminé plus le résultat
         var alertPopup = $ionicPopup.alert({
           title: 'Confirmation',
-          template: '<i>Résultat Import albums</i><br>'+$scope.added+' elements added<br>'+$scope.updated+' elements updated<br>'+$scope.skipped+' elements non importés'
+          template: '<i>Résultat Import albums</i><br>'+$scope.added+' albums added<br>'+$scope.updated+' albums updated<br>'+$scope.skipped+' albums non importés'
         });
         alertPopup.then(function(res) {
           $state.go('app.home');
         });
-
       }
     });
   }])
@@ -770,11 +801,11 @@ angular.module('BDLibApp.controllers', ['ui.router'])
   .controller('HomeCtrl', ['$scope','CRUDService', 'SearchAlbumService', '$log', '$state', '$ionicHistory', function($scope, CRUDService, SearchAlbumService, $log, $state, $ionicHistory) {
     $ionicHistory.clearHistory();
 
-    $scope.$on('$ionicView.afterEnter', function(){
-      setTimeout(function(){
-        document.getElementById("custom-overlay").style.display = "none";
-      }, 3000);
-    });
+    // $scope.$on('$ionicView.afterEnter', function(){
+    //   setTimeout(function(){
+    //     document.getElementById("custom-overlay").style.display = "none";
+    //   }, 3000);
+    // });
 
     // Chargement de tous les albums en mémoire pour recherche par substring (like '%mar%')
       $scope.data = { "albums" : [], "search" : '' };
