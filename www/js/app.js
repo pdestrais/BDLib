@@ -5,9 +5,9 @@
 // the 2nd parameter is an array of 'requires'
 // 'starter.services' is found in services.js
 // 'starter.controllers' is found in controllers.js
-angular.module('BDLibApp', ['ionic', 'ionic-material', 'BDLibApp.controllers', 'BDLibApp.services', 'BDLibApp.directives', 'ngPouch', 'ngMessages'])
+angular.module('BDLibApp', ['ionic', 'ionic-material', 'BDLibApp.controllers', 'BDLibApp.services', 'BDLibApp.directives', 'pouchService', 'ngMessages'])
 
-.run(function ($ionicPlatform,ngPouch,$log,$cacheFactory) {
+.run(function ($ionicPlatform,pouchService,$log,$cacheFactory) {
 	$ionicPlatform.ready(function () {
 		// Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
 		// for form inputs)

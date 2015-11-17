@@ -1,13 +1,13 @@
 angular.module('BDLibApp.services', [])
 
-	.factory('CRUDService', ['ngPouch', '$log', '$q', function (ngPouch, $log, $q) {
+	.factory('CRUDService', ['pouchService', '$log', '$q', function (pouchService, $log, $q) {
 
 				var srv = {
 					getList : function (entityType,viewName,options) {
 						var defer = $q.defer();
 						var list = [];
 						//	viewName = "filterOn"+capitalizeFirstLetter(entityType);
-						ngPouch.db.query(viewName,options)
+						pouchService.db.query(viewName,options)
 						.then(function (result) {
 							$log.debug("CRUDService - "+ entityType+ " list result : " + JSON.stringify(result));
 							angular.forEach(result.rows, function (value, index) {
@@ -29,7 +29,7 @@ angular.module('BDLibApp.services', [])
 							"type" : type
 						};
 						doc[type]=item;
-						ngPouch.db.post(doc)
+						pouchService.db.post(doc)
 						.then(function (response) {
 							$log.info("CRUDService - "+ entityType+ " " + JSON.stringify(item) + " ajouté");
 							doc._id = response.id;
@@ -49,7 +49,7 @@ angular.module('BDLibApp.services', [])
 						doc[type]=item;
 						if (!rev)
 						{
-							ngPouch.db.get(doc._id)
+							pouchService.db.get(doc._id)
 							.then(function (resdoc) {
 									doc._rev = resdoc._rev;
 								}).catch (function (err) {
@@ -57,7 +57,7 @@ angular.module('BDLibApp.services', [])
 									defer.reject(err);
 								});
 						}
-						ngPouch.db.put(doc)
+						pouchService.db.put(doc)
 						.then(function(resultput) {
 								$log.info("CRUDService - "+ entityType+ " " + JSON.stringify(resultput) + " updaté");
 								defer.resolve(resultput);
@@ -69,11 +69,11 @@ angular.module('BDLibApp.services', [])
 					},
 					deleteItem : function (item,entityType) {
 						var defer = $q.defer();
-						ngPouch.db.get(item._id)
+						pouchService.db.get(item._id)
 						.then(function (doc) {
 							item._rev = doc._rev;
 							$log.info("CRUDService - "+ entityType+ " " + JSON.stringify(item) + " effacé");
-							defer.resolve(ngPouch.db.remove(item));
+							defer.resolve(pouchService.db.remove(item));
 						}).catch (function (err) {
 							$log.error("CRUDService - delete "+ entityType+ " problem" + JSON.stringify(err));
 							defer.reject(err);
@@ -82,7 +82,7 @@ angular.module('BDLibApp.services', [])
 					},
 					getItem : function (itemid,entityType) {
 						var defer = $q.defer();
-						ngPouch.db.get(itemid)
+						pouchService.db.get(itemid)
 						.then(function (doc) {
 							defer.resolve(doc);
 						}).catch (function (err) {
@@ -96,7 +96,7 @@ angular.module('BDLibApp.services', [])
 			}
 		])
 
-	.factory('ViewsService', ['ngPouch', '$log', '$q', function (ngPouch, $log, $q) {
+	.factory('ViewsService', ['pouchService', '$log', '$q', function (pouchService, $log, $q) {
 
 			var srv = {
 				create : function () {
@@ -108,14 +108,14 @@ angular.module('BDLibApp.services', [])
 																					emit(doc._id, doc.genre.nom);
 																				}
 																			});
-						ngPouch.db.get(filterOnGenre._id)
+						pouchService.db.get(filterOnGenre._id)
 						.then(function(doc) {
 							if (doc._rev) {
 								filterOnGenre._rev=doc._rev;
 							}
 							if (cleanText(doc.views.filterOnGenre.map) != cleanText(filterOnGenre.views.filterOnGenre.map)) {
 								$log.info("filterOnEditeur view updated");
-								return ngPouch.db.put(filterOnGenre);
+								return pouchService.db.put(filterOnGenre);
 							} else {
 								return null;
 							}
@@ -128,20 +128,20 @@ angular.module('BDLibApp.services', [])
 																					emit(doc._id, doc);
 																				}
 																			});
-						ngPouch.db.get(filterOnEditeur._id)
+						pouchService.db.get(filterOnEditeur._id)
 						.then(function(doc) {
 							if (doc._rev) {
 								filterOnEditeur._rev=doc._rev;
 							}
 							if (cleanText(doc.views.filterOnEditeur.map) != cleanText(filterOnEditeur.views.filterOnEditeur.map)) {
 								$log.info("filterOnEditeur view updated");
-								return ngPouch.db.put(filterOnEditeur);
+								return pouchService.db.put(filterOnEditeur);
 							} else {
 								return null;
 							}
 						}).catch(function (err) {
 							if (err.message=="missing") {
-								ngPouch.db.post(filterOnEditeur)
+								pouchService.db.post(filterOnEditeur)
 								.then(function (response) {
 									$log.info("filterOnEditeur view created");
 								}).catch(function (err) {
@@ -157,20 +157,20 @@ angular.module('BDLibApp.services', [])
 																					emit(doc.serie.nom, doc);
 																				}
 																			});
-						ngPouch.db.get(filterOnSerie._id)
+						pouchService.db.get(filterOnSerie._id)
 						.then(function(doc) {
 							if (doc._rev) {
 								filterOnSerie._rev=doc._rev;
 							}
 							if (cleanText(doc.views.filterOnSerie.map) != cleanText(filterOnSerie.views.filterOnSerie.map)) {
 								$log.info("filterOnSerie view updated");
-								return ngPouch.db.put(filterOnSerie);
+								return pouchService.db.put(filterOnSerie);
 							} else {
 								return null;
 							}
 						}).catch(function (err) {
 							if (err.message=="missing") {
-								ngPouch.db.post(filterOnSerie)
+								pouchService.db.post(filterOnSerie)
 								.then(function (response) {
 									$log.info("filterOnSerie view created");
 								}).catch(function (err) {
@@ -186,20 +186,20 @@ angular.module('BDLibApp.services', [])
 																					emit([doc.album.serieId,doc.album.numero], doc.album);
 																				}
 																			});
-						ngPouch.db.get(listAlbumsBySerieId._id)
+						pouchService.db.get(listAlbumsBySerieId._id)
 						.then(function(doc) {
 							if (doc._rev) {
 								listAlbumsBySerieId._rev=doc._rev;
 							}
 							if (cleanText(doc.views.listAlbumsBySerieId.map) != cleanText(listAlbumsBySerieId.views.listAlbumsBySerieId.map)) {
 								$log.info("listAlbumsBySerieId view created");
-								return ngPouch.db.put(listAlbumsBySerieId);
+								return pouchService.db.put(listAlbumsBySerieId);
 							} else {
 								return null;
 							}
 						}).catch(function (err) {
 							if (err.message=="missing") {
-								ngPouch.db.post(listAlbumsBySerieId)
+								pouchService.db.post(listAlbumsBySerieId)
 								.then(function (response) {
 									$log.info("listAlbumsBySerieId view created");
 								}).catch(function (err) {

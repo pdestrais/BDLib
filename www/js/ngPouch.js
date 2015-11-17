@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('ngPouch', ['ngStorage','pouchdb'])
-  .service('ngPouch', function($timeout, $localStorage, pouchDB, $log) {
+  .service('ngPouch', function($timeout, $localStorage, pouchDB, $log, $rootScope) {
 
     var service =  {
       // Databases
@@ -11,6 +11,8 @@ angular.module('ngPouch', ['ngStorage','pouchdb'])
       // Options
       invokeApply: true,
 
+      // promise
+      deferred: undefined,
 
       // Persistent Settings
       settings: {
@@ -69,6 +71,87 @@ angular.module('ngPouch', ['ngStorage','pouchdb'])
         return [this.statusIcon(), this.statusTitle()];
       },
 
+      start: function() {
+        // Load Persistent Data
+        this.loadSettings();
+        this.replicateToFrom(this.settings);
+      },
+
+      resetAndSaveSettings: function(settings) {
+        var self = this;
+        // self.deferred = $q.defer();
+        self.disconnect();
+        self.db.destroy().then( function() {
+          $log.info('LocalDB destroyed');
+          self.db = new PouchDB("LocalDB");
+          $localStorage.pouchStatus = {};
+          $localStorage.session = {};
+//          self.init();
+//          self.trackChanges();
+          self.replicateToFrom(settings);
+        })
+        .catch(function (err) {
+          $log.error('local DB not destroyed : '+JSON.stringify(err));
+        });
+        //return self.deferred.promise;
+      },
+
+      replicateToFrom: function(settings) {
+        var self = this;
+        var remoteURL = settings.database;
+        if (settings.username || settings.password) {
+          remoteURL = settings.database.slice(0,settings.database.indexOf("://")+3)+settings.username+':'+settings.password+'@'+settings.database.slice(settings.database.indexOf("://")+3,settings.database.length);
+        }
+        var repTo = PouchDB.replicate('LocalDB', remoteURL, {
+              live: true,
+              retry: true
+            }).on('change', function (info) {
+              // handle change
+              $log.info("[replicateTo]change event : "+JSON.stringify(info));
+            }).on('paused', function (err) {
+              // replication paused (e.g. user went offline)
+              $log.info("[replicateTo]paused event : "+JSON.stringify(err));
+            }).on('active', function () {
+              // replicate resumed (e.g. user went back online)
+              $log.info("[replicateTo]active event ");
+            }).on('denied', function (info) {
+              // a document failed to replicate, e.g. due to permissions
+              $log.info("[replicateTo]denied event : "+JSON.stringify(info));
+            }).on('complete', function (info) {
+              // handle complete
+              $log.info("[replicateTo]complete event : "+JSON.stringify(info));
+            }).on('error', function (err) {
+              // handle error
+              $log.info("[replicateTo]error event : "+JSON.stringify(err));
+            });
+        var repFrom = PouchDB.replicate(remoteURL, 'LocalDB', {
+              live: true,
+              retry: true
+            }).on('change', function (info) {
+              // handle change
+              $log.info("[replicateFrom]change event : "+JSON.stringify(info));
+            }).on('paused', function (err) {
+              // replication paused (e.g. user went offline)
+              $log.info("[replicateFrom]paused event : "+JSON.stringify(err));
+              $rootScope.$broadcast('replicationEnded');
+            }).on('active', function () {
+              // replicate resumed (e.g. user went back online)
+              $log.info("[replicateFrom]active event ");
+              $rootScope.$broadcast('replicationStarted');
+            }).on('denied', function (info) {
+              // a document failed to replicate, e.g. due to permissions
+              $log.info("[replicateFrom]denied event : "+JSON.stringify(info));
+            }).on('complete', function (info) {
+              // handle complete
+              $log.info("[replicateFrom]complete event : "+JSON.stringify(info));
+            }).on('error', function (err) {
+              // handle error
+              $log.info("[replicateFrom]error event : "+JSON.stringify(err));
+            });
+            this.settings = settings;
+            $localStorage.pouchSettings = settings;
+//        self.saveSettings(settings);
+      },
 
       /*
        *  storage aware accessors for settings and status
@@ -250,8 +333,9 @@ angular.module('ngPouch', ['ngStorage','pouchdb'])
         });
       },
 
-      resetAndSaveSettings: function(settings) {
+      resetAndSaveSettingsBis: function(settings) {
         var self = this;
+        // self.deferred = $q.defer();
         self.disconnect();
         self.db.destroy().then( function() {
           $log.info('LocalDB destroyed');
@@ -265,6 +349,7 @@ angular.module('ngPouch', ['ngStorage','pouchdb'])
         .catch(function (err) {
           $log.error('local DB not destroyed : '+JSON.stringify(err));
         });
+        //return self.deferred.promise;
       },
 
       // Destroy and recreated local db and changes db
@@ -452,14 +537,17 @@ angular.module('ngPouch', ['ngStorage','pouchdb'])
             $log.info("[ngPouch/handleReplicationFrom]Received uptodate event");
             self.maxOutProgressiveDelay();
             self.delaySessionStatus(800, "idle");
+            $rootScope.$broadcast('docReceived');
             break;
           case "error":
             $log.info("[ngPouch/handleReplicationFrom]Received error event : "+JSON.stringify(event)  );
             self.restartProgressiveDelay();
             self.delaySessionStatus(800, "offline");
+            //self.deferred.reject('ReplicationFromError');
             break;
           case "complete":
             $log.info("[ngPouch/handleReplicationFrom]Received complete event");
+            //self.deferred.resolve('ReplicationFromCompleted');
             //self.restartProgressiveDelay();
             //self.delaySessionStatus(800, "offline");
             break;
@@ -574,6 +662,6 @@ angular.module('ngPouch', ['ngStorage','pouchdb'])
 
     };
 
-    service.init();
+    service.start();
     return service
   });

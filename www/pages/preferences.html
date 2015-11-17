@@ -4,7 +4,13 @@
                     <!-- <ion-list style=""> -->
                         Url Serveur distant</br>
                         <label style="" name="remoteServerUrl" class="item item-input">
-                            <input placeholder="URL server DB" type="text" ng-model="data.url">
+                            <input placeholder="URL remote noSQL DB" type="text" ng-model="data.url">
+                        </label>
+                        <label style="" name="userid" class="item item-input">
+                            <input placeholder="Userid remote server" type="text" ng-model="data.user">
+                        </label>
+                        <label style="" name="remoteServerUrl" class="item item-input">
+                            <input placeholder="password remote server" type="text" ng-model="data.pwd">
                         </label>
                         <!-- autre Serveur distant</br>
                         <label style="" name="altremoteServerUrl" class="item item-input">
@@ -14,6 +20,7 @@
                     <ion-button class="button button-full button-positive" ng-click="updateRemoteUrl()">
                           Enregistrer
                     </ion-button>
+
                 </form>
             </ion-content>
 </ion-view>

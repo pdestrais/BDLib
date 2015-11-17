@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
+    <!-- <meta http-equiv="Content-Security-Policy" content="default-src *; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval'"> -->
     <title></title>
 
     <link href="/css/preview-frame.css" rel="stylesheet">
@@ -13,7 +14,8 @@
     <!-- ionic/angularjs js -->
      <script src="lib/ionic/js/ionic.bundle.js"></script>
      <script src="lib/ionic-material/dist/ionic.material.min.js"></script>
-	 <script src="lib/pouchdb/dist/pouchdb-3.6.0.js"></script>
+     <script src="lib/pouchdb/dist/pouchdb-3.6.0.js"></script>
+     <script src="lib/pouchdb-authentication/pouchdb.authentication.js"></script>
 	 <script src="lib/angular-pouchdb/angular-pouchdb.js"></script>
 	 <script src="lib/ngstorage/ngStorage.js"></script>
    <script src="lib/angular-messages/angular-messages.js"></script>
@@ -25,7 +27,7 @@
     <script src="js/controllers.js"></script>
     <script src="js/services.js"></script>
     <script src="js/directives.js"></script>
-    <script src="js/ngPouch.js"></script>
+    <script src="js/pouchService.js"></script>
     <script type="text/javascript" src="lib/angular-round-progress-directive/angular-round-progress-directive.js"></script>
     <!--<script src="js/bdtheque_data.js"></script> -->
 
@@ -33,13 +35,6 @@
   <body ng-app="BDLibApp" animation="slide-left-right-ios7">
     <!-- <div id="custom-overlay"><img src="img/bededb.png" height="400" width="250"></div> -->
     <ion-nav-view></ion-nav-view>
-
-    <script id="error-list.html" type="text/ng-template">
-      <div class="error" ng-message="required">
-        <i class="ion-information-circled"></i>
-        This field is required!
-      </div>
-    </script>
 
   </body>
 </html>

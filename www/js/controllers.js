@@ -1,10 +1,10 @@
 angular.module('BDLibApp.controllers', ['ui.router','angular.directives-round-progress'])
 
-  .controller('AppCtrl', ['ViewsService','$cacheFactory','ngPouch','$state','$scope', '$ionicSideMenuDelegate', function (ViewsService,$cacheFactory,ngPouch,$state,$scope, $ionicSideMenuDelegate) {
+  .controller('AppCtrl', ['ViewsService','$cacheFactory','pouchService','$state','$scope', '$ionicSideMenuDelegate', function (ViewsService,$cacheFactory,pouchService,$state,$scope, $ionicSideMenuDelegate) {
 
       // check if remotedb has already been initialized
       // if yes, create views, if not redirect to preferences page
-      if (ngPouch.getSettings().database === undefined) {
+      if (pouchService.getSettings().database === undefined) {
         $state.go('app.preferences',{
           init: 0
         });
@@ -14,31 +14,79 @@ angular.module('BDLibApp.controllers', ['ui.router','angular.directives-round-pr
     }
   ])
 
-  .controller('PreferenceCtrl', ['$cacheFactory','ngPouch','$ionicPopup', '$scope', '$state','$log', function ($cacheFactory,ngPouch, $ionicPopup, $scope, $state, $log) {
+  .controller('PreferenceCtrl', ['$cacheFactory','pouchService','$ionicPopup', '$scope', '$state','$http', '$log','$ionicLoading', function ($cacheFactory,pouchService, $ionicPopup, $scope, $state, $http, $log, $ionicLoading) {
       $scope.data = {};
 
-      if (ngPouch.getSettings().database === undefined) {
+      if (pouchService.getSettings().database === undefined) {
         // si l'applcation n'est pas initialisée, créer une valeur par défault
         $scope.data.url = "http://localhost:5984/bdlibdev";
       } else {
         // sinon aller chercher la valeur sauvegardée précédemment
-          $scope.data.url = ngPouch.getSettings().database;
+          $scope.data.url = pouchService.getSettings().database;
+          $scope.data.user = pouchService.getSettings().username;
+          $scope.data.pwd = pouchService.getSettings().password;
       }
 
       $scope.updateRemoteUrl = function () {
-          if (ngPouch.getSettings().database != $scope.data.url) {
-              $log.info("PreferenceCtrl - ngPouch DB setting before "+JSON.stringify(ngPouch.getSettings())+' - after : '+$scope.data.url);
-              ngPouch.resetAndSaveSettings({database:$scope.data.url,stayConnected: true });
-              $log.info("db settings updated");
+        var newURL = $scope.data.url;
+        var b64encodedAuth;
+        var httpOptions;
+        if ($scope.data.user || $scope.data.pwd) {
+          newURL = $scope.data.url.slice(0,$scope.data.url.indexOf("://")+3)+$scope.data.user+':'+$scope.data.pwd+'@'+$scope.data.url.slice($scope.data.url.indexOf("://")+3,$scope.data.url.length);
+          b64encodedAuth = btoa($scope.data.user+':'+$scope.data.pwd);
+          httpOptions = {headers: {'Authorization': 'Basic '+b64encodedAuth}};
+        }
+        if (pouchService.getSettings().database != $scope.data.url) {
+            $log.info("PreferenceCtrl - pouchService DB setting before "+JSON.stringify(pouchService.getSettings())+' - after : '+$scope.data.url);
+            // checking that new URL responds something before changing
+            $http.get($scope.data.url+'/_design/filterOnSerie/_view/filterOnSerie', httpOptions)
+            .then(function(response){
+              $log.info("reponse : "+JSON.stringify(response));
+              var docsToUpdate = response.data.total_rows;
+              var confirmPopup = $ionicPopup.confirm({
+                title: 'Information',
+                template: "La base de donnée distante contient "+docsToUpdate+" séries. \n Continuer ?"
+              });
+              confirmPopup.then(function(res) {
+                if(res) {
+                  pouchService.resetAndSaveSettings({database:$scope.data.url,username:$scope.data.user,password:$scope.data.pwd,stayConnected: true });
+                } else {
+                  $state.go('app.home');
+                }
+              });
+            }, function(errorResponse){
+              $log.info("db settings not updated because remote URL doesn't repond "+JSON.stringify(errorResponse));
               var alertPopup = $ionicPopup.alert({
-                title: 'Confirmation',
-                template: 'DB distante changée'
+                title: 'Erreur',
+                template: "Aucune réponse de l'URL fournie"
               });
               alertPopup.then(function(res) {
                 $state.go('app.home');
               });
-          }
+            });
+        }
       };
+
+      // When all docs have been received, hide loading indicator and confirm change
+      $scope.$on('replicationEnded', function(event) {
+        $ionicLoading.hide();
+        $log.info("db settings updated");
+        var alertPopup = $ionicPopup.alert({
+          title: 'Confirmation',
+          template: 'DB distante changée'
+        });
+        alertPopup.then(function(res) {
+          $state.go('app.home');
+        });
+      });
+
+      // When all docs have been received, hide loading indicator and confirm change
+      $scope.$on('replicationStarted', function(event) {
+        $ionicLoading.show({
+          template: 'Synchronizing data </br> <ion-spinner icon="ripple" class="spinner-light"></ion-spinner>'
+        });
+      });
+
   }
   ])
 

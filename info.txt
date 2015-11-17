@@ -1,3 +1,9 @@
+Node version: v0.12.4
+
+Cordova version: 5.1.1
+
+Config.xml file: 
+
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <widget id="com.phd.dblib" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
   <name>BDLib</name>
@@ -9,8 +15,8 @@
     </author>
   <content src="index.html"/>
   <access origin="*"/>
-  <!-- <allow-navigation href="*"/>
-  <allow-intent href="*"/> -->
+  <allow-navigation href="*"/>
+  <allow-intent href="*"/>
   <preference name="webviewbounce" value="false"/>
   <preference name="UIWebViewBounce" value="false"/>
   <preference name="DisallowOverscroll" value="true"/>
@@ -43,3 +49,10 @@
   </platform>
   <icon src="resources/android/icon/drawable-xhdpi-icon.png"/>
 </widget>
+
+Plugins: 
+
+cordova-plugin-whitelist
+
+No Platforms Currently Installed
+
