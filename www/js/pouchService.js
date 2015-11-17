@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('pouchService', ['ngStorage','pouchdb'])
-  .service('pouchService', function($timeout, $localStorage, pouchDB, $log, $rootScope) {
+angular.module('pouchService', ['ngStorage'])
+  .service('pouchService', function($timeout, $localStorage, $log, $rootScope) {
 
     var service =  {
       // Databases
@@ -26,7 +26,9 @@ angular.module('pouchService', ['ngStorage','pouchdb'])
       start: function() {
         // Load Persistent Data
         this.loadSettings();
-        this.replicateToFrom(this.settings);
+        if (this.settings.database) {
+          this.replicateToFrom(this.settings);
+        }
       },
 
       resetAndSaveSettings: function(settings) {
@@ -45,8 +47,8 @@ angular.module('pouchService', ['ngStorage','pouchdb'])
 
       replicateToFrom: function(settings) {
         var self = this;
-        var remoteURL = settings.database;
-        if (settings.username || settings.password) {
+        var remoteURL = this.settings.database || "http://localhost:5984/db";
+        if (this.settings.username || this.settings.password) {
           remoteURL = settings.database.slice(0,settings.database.indexOf("://")+3)+settings.username+':'+settings.password+'@'+settings.database.slice(settings.database.indexOf("://")+3,settings.database.length);
         }
         self.session.replicationTo = PouchDB.replicate('LocalDB', remoteURL, {
@@ -57,7 +59,7 @@ angular.module('pouchService', ['ngStorage','pouchdb'])
               $log.info("[replicateTo]change event : "+JSON.stringify(info));
             }).on('paused', function (err) {
               // replication paused (e.g. user went offline)
-              $log.info("[replicateTo]paused event : "+JSON.stringify(err));
+              $log.info("[replicateTo]paused event ");
             }).on('active', function () {
               // replicate resumed (e.g. user went back online)
               $log.info("[replicateTo]active event ");
@@ -79,7 +81,7 @@ angular.module('pouchService', ['ngStorage','pouchdb'])
               $log.info("[replicateFrom]change event : "+JSON.stringify(info));
             }).on('paused', function (err) {
               // replication paused (e.g. user went offline)
-              $log.info("[replicateFrom]paused event : "+JSON.stringify(err));
+              $log.info("[replicateFrom]paused event ");
               $rootScope.$broadcast('replicationEnded');
             }).on('active', function () {
               // replicate resumed (e.g. user went back online)

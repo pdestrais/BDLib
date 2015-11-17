@@ -5,7 +5,7 @@
 // the 2nd parameter is an array of 'requires'
 // 'starter.services' is found in services.js
 // 'starter.controllers' is found in controllers.js
-angular.module('BDLibApp', ['ionic', 'ionic-material', 'BDLibApp.controllers', 'BDLibApp.services', 'BDLibApp.directives', 'pouchService', 'ngMessages'])
+angular.module('BDLibApp', ['ionic', 'BDLibApp.controllers', 'BDLibApp.services', 'BDLibApp.directives', 'pouchService'])
 
 .run(function ($ionicPlatform,pouchService,$log,$cacheFactory) {
 	$ionicPlatform.ready(function () {

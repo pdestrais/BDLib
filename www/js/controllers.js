@@ -1,4 +1,4 @@
-angular.module('BDLibApp.controllers', ['ui.router','angular.directives-round-progress'])
+angular.module('BDLibApp.controllers', ['ui.router'])
 
   .controller('AppCtrl', ['ViewsService','$cacheFactory','pouchService','$state','$scope', '$ionicSideMenuDelegate', function (ViewsService,$cacheFactory,pouchService,$state,$scope, $ionicSideMenuDelegate) {
 
